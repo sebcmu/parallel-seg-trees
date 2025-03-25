@@ -18,6 +18,7 @@ This gives the first approach, a manual range query, an O(1) update and an O(n) 
 SegTrees implement O(log n) updates and range queries by using an array to represent a complete tree. On the bottom level is the array, on the next level is half the nodes of the lower level with sub computations A[0] + A[1], A[2] + A[3], and so on, and this pattern continues to the root of the tree which contains the result of the query on the entire array. Updates of array positions include updating all nodes on the path from leaf to tree that contain the array position. Range queries involve determining which blocks compose the range query.
 
 ![Figure 1](images/projprop-fig1.png)
+
 Figure 1: How a SegTree is represented as a tree and as an array.
 
 With updates corresponding to traversing a tree from leaf to root, there is opportunity for parallelizing updates by having multiple processors perform separate updates along separate paths. Alternatively, parallelism could be attained by having multiple processors update separate array positions for a single update. Moreover, since range queries are read-only, multiple processors should be able to range query at the same time, provided no updates take place between subsequent range queries. These ideas present many opportunities for parallelism, as there are many ways to perform collaborative or per-processor updates.
@@ -29,7 +30,8 @@ Since the memory accesses and modifications depend on the specifics of the opera
 
 With two update paths having the ability to cross at their lowest common ancestors in the SegTree, parallelizing updates requires a careful implementation to ensure updates to nodes in the SegTree are not lost due to memory operations not being atomic. This is where coarse-grained locking, fine-grained locking, and a lock-free implementation of the SegTree data-structure are important. Additionally, if range queries are overlapped with updates, we may not see the intended design of a range query after an update if the update has not finished before a query commences. This provides a challenge in dealing with the different operations quickly.
 
-![Figure 2](images/projprop-fig1.png)
+![Figure 2](images/projprop-fig2.png)
+
 Figure 2: Update paths crossing. We need to ensure atomic updates to ensure updates aren’t lost.
 
 At the same time, updates may not overlap at all, at least until the top few layers. In this case, there are opportunities for prefetching up the SegTree path so that later computations can be performed more efficiently. If two update paths cross and invalidate each other’s prefetched data, perhaps consolidating update paths could be beneficial.
@@ -66,4 +68,13 @@ We will use GHC machines to test and debug our implementations due to our immedi
 Our code will be written in C++ due to our familiarity with implementing parallel algorithms with this language. To create test files with specific proportions of updates to queries, we will use Python.
 
 ## Schedule
+- By 3/28: Create file structure, including makefile
+- By 4/4: Implement coarse-grained and fine-grained locking queries and updates using SegTrees
+- By 4/11: Implement lock-free SegTrees and CUDA-based manual range queries and prefix sum range queries
+- By 4/15: Create a script for generating test files and perform initial testing on each implementation
+- By 4/18: Begin drafting final report, experiment with false-sharing optimizations and prefetching optimizations
+- By 4/25: Complete testing on PSC machines for important graphs, begin drafting final poster
+- By 4/28: Finalize final report and submit, finalize poster, have practice run-throughs for presentation
+- By 4/29: Present our final poster
+
 
