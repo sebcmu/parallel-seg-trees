@@ -21,7 +21,7 @@ Figure 1: How a SegTree is represented as a tree and as an array.
 
 With updates corresponding to traversing a tree from leaf to root, there is opportunity for parallelizing updates by having multiple processors perform separate updates along separate paths. Alternatively, parallelism could be attained by having multiple processors update separate array positions for a single update. Moreover, since range queries are read-only, multiple processors should be able to range query at the same time, provided no updates take place between subsequent range queries. These ideas present many opportunities for parallelism, as there are many ways to perform collaborative or per-processor updates.
 
-Inspiration taken from the 15-451 textbook.
+Inspiration taken from the [15-451](https://www.cs.cmu.edu/~15451-f24/lectures/lecture06-range-queries.pdf) textbook.
 
 ## The Challenge
 Since the memory accesses and modifications depend on the specifics of the operation (an update or a range query), the depth and width of necessary accesses and changes is unpredictable. Therefore, we will need to make decisions in work allocation, notably across sub-trees versus across operations, and synchronization of shared resources, such as the top, most commonly modified nodes, to scale performance with the number of processors. 
@@ -45,18 +45,18 @@ For testing, we will use the GHC machines to test at lower thread counts and exp
 
 ## Goals and Deliverables
 **Plan to Achieve:**  
-Coarse-grained locking, fine-grained locking, and lock-free implementations of SegTrees  
-CUDA-based implementations of the manual range query and prefix range query approaches  
-Parallel SegTree implementations distributing work within operations, across operations, and both within and across operations  
-In-depth analysis of each parallel range query implementations on workloads of varying proportions of updates versus queries and workloads with non-constant update functions  
-Comparing idle time, synchronization stalls, computation time, and cache miss stalls  
-Graphing time of each implementation as a function of proportion of updates to queries within the workload (keeping the number of threads constant)  
-In-depth analysis of performance of each implementation with different thread counts  
+- Coarse-grained locking, fine-grained locking, and lock-free implementations of SegTrees  
+- CUDA-based implementations of the manual range query and prefix range query approaches  
+- Parallel SegTree implementations distributing work within operations, across operations, and both within and across operations  
+- In-depth analysis of each parallel range query implementations on workloads of varying proportions of updates versus queries and workloads with non-constant update functions  
+  - Comparing idle time, synchronization stalls, computation time, and cache miss stalls  
+  - Graphing time of each implementation as a function of proportion of updates to queries within the workload (keeping the number of threads constant)  
+- In-depth analysis of performance of each implementation with different thread counts  
 
 **Hope to Achieve:**  
-False-sharing optimizations: exploring high-frequency intra-level padding, low-frequency intra-level padding, and inter-level padding  
-Prefetching optimizations: exploring different levels of aggression of prefetching  
-Combining update paths: exploring the effect of consolidating update paths for processors who cross update paths
+- False-sharing optimizations: exploring high-frequency intra-level padding, low-frequency intra-level padding, and inter-level padding  
+- Prefetching optimizations: exploring different levels of aggression of prefetching  
+- Combining update paths: exploring the effect of consolidating update paths for processors who cross update paths
 
 ## Platform Choice
 We will use GHC machines to test and debug our implementations due to our immediate access to compute on these clusters. We will then use PSC machines on our experiments to provide consistent measurements of performance across thread counts varying from 1 to 256. 
@@ -64,4 +64,4 @@ We will use GHC machines to test and debug our implementations due to our immedi
 Our code will be written in C++ due to our familiarity with implementing parallel algorithms with this language. To create test files with specific proportions of updates to queries, we will use Python.
 
 ## Schedule
-*To be added.*
+
