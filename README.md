@@ -1,1 +1,2 @@
-# parallel-seg-trees
+# Title: Parallelizing Range Queries with Lock-Free SegTrees
+Project Proposal URL: https://docs.google.com/document/d/1eWPgreqgFoRSX5UEmm4fQpW3uQdB0SEaPf7LEQZXXiY/edit?usp=sharing
