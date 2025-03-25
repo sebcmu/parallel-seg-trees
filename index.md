@@ -4,8 +4,8 @@ title: Parallelizing Range Queries with Lock-Free SegTrees
 ---
 
 Title: Parallelizing Range Queries with Lock-Free SegTrees  
-Authors: Sebastian Dounchis, Neo Lopez  
-Web Page URL: https://github.com/sebcmu/parallel-seg-trees
+Authors: Sebastian Dounchis, Neo Lopez
+
 [Project Proposal PDF](docs/Project%20Proposal%20418.pdf)
 
 ## Summary
