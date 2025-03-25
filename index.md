@@ -6,6 +6,7 @@ title: Parallelizing Range Queries with Lock-Free SegTrees
 Title: Parallelizing Range Queries with Lock-Free SegTrees  
 Authors: Sebastian Dounchis, Neo Lopez  
 Web Page URL: https://github.com/sebcmu/parallel-seg-trees
+[Project Proposal PDF](docs/Project%20Proposal%20418.pdf)
 
 ## Summary
 We are going to implement parallelized range queries and updates with coarse-grained locking, fine-grained locking and lock-free SegTrees. Then, we will analyze their performance on a diverse set of workloads, adding and comparing optimizations such as prefetching, vectorized instructions, and multi-threaded collaborative updates versus distributing updates across processors.
