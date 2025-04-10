@@ -46,8 +46,8 @@ int main(int argc, char* argv[]) {
     int num_query, num_update;
     int orig_array_size, array_size;
 
-    /* Read Array Size, Number of Queries, Number of Updates */
-    fin >> orig_array_size >> num_query >> num_update;
+    /* Read Array Size, Number of Updates, Number of Queries */
+    fin >> orig_array_size >> num_update >> num_query;
     int num_ops = num_query + num_update;
 
     
