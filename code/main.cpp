@@ -3,23 +3,33 @@
 #include <unistd.h>
 #include <vector>
 #include <array>
+#include <iomanip>
 #include <fstream>
 #include <cmath>
+#include <chrono>
 
 #include "constants.hpp"
 
 void runSerialImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
     std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results);
 
+void runCoarseImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
+
+void runFineImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
+
 int main(int argc, char* argv[]) {
     /* Default Parameters */
+    const auto init_start = std::chrono::steady_clock::now();
     std::string mode = "serial";
     int validate = 0;
     std::string input_filename = "./inputs/testinputs/simpletest.txt";
+    int num_threads = 1;
 
     /* Read Inputs */
     int opt;
-    while ((opt = getopt(argc, argv, "f:m:v")) != -1) {
+    while ((opt = getopt(argc, argv, "f:m:t:v")) != -1) {
         switch (opt) {
             case 'f':
                 input_filename = optarg;
@@ -30,9 +40,19 @@ int main(int argc, char* argv[]) {
             case 'v':
                 validate = 1;
                 break;
+            case 't':
+                num_threads = atoi(optarg);
+                break;
             default:
-                std::cerr << "Usage: " << argv[0] << "./rangequery -m <mode> -f <input_filename> [-v]\n";
+                std::cerr << "Usage: " << argv[0] << "./rangequery -m <mode> -f <input_filename> -t <num_threads> [-v]\n";
+                return 1;
         }
+    }
+
+    // Check if required options are provided
+    if (empty(input_filename) || num_threads < 1) {
+        std::cerr << "Usage: " << argv[0] << "./rangequery -m <mode> -f <input_filename> -t <num_threads> [-v]\n";;
+        return 1;
     }
 
     /* Parse Input File */
@@ -98,14 +118,33 @@ int main(int argc, char* argv[]) {
     /* Create vector query_results to check queries for correctness */
     std::vector<std::array<int,2>> query_results(num_query);
 
+    const double init_time = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - init_start).count();
+
+    /* Begin computation */
+    const auto compute_start = std::chrono::steady_clock::now();
     if (mode == "serial") {
         std::cout << "[INFO] Running the serial implementation...\n";
         runSerialImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results);
+    } 
+    else if (mode == "coarse") {
+        std::cout << "[INFO] Running the coarse-grained locking implementation...\n";
+        runCoarseImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads);
+    } 
+    else if (mode == "fine") {
+        std::cout << "[INFO] Running the fine-grained locking implementation...\n";
+        runFineImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads);
     } 
     else {
         std::cerr << "Error: Unknown mode \"" << mode << "\". Only 'serial' mode is supported.\n";
         return 1;
     }
+
+    const double compute_time = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - compute_start).count();
+
+    std::cout << "Initialization time (sec): " << std::fixed << std::setprecision(5) << init_time << '\n';
+    std::cout << "Computation time (sec): " << std::fixed << std::setprecision(5) << compute_time << '\n';
+    std::cout << "Total time (sec): " << std::fixed << std::setprecision(5) << compute_time + init_time << '\n';
+    
 
     /* CHECK queries if validate flag is on */
     if (validate){
@@ -113,7 +152,7 @@ int main(int argc, char* argv[]) {
             int res;
             fin >> res;
             if (query_results[i][1] != res) {
-                std::cout << "Query " << i << " is incorrect, expected: " << res << ", actual: " << query_results[i][1] << ", Operation Index: " << query_results[i][0] << ", Txt Line: " << query_results[i][0] + 3<<"\n";
+                std::cout << "Query " << i << " is incorrect, expected: " << res << ", actual: " << query_results[i][1] << ", Operation Index: " << query_results[i][0] <<"\n";
                 break;
             }
             if (i == num_query - 1) {
