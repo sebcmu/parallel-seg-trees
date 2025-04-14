@@ -6,19 +6,13 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
 #include "constants.hpp"
 #include "helpers.hpp"
 
-std::atomic<int> fine_op_iter(0);
-std::atomic<int> fine_query_iter(0);
-
-void fineUpdateWorker(const int batch_end, const int array_size, const std::vector<std::array<int, 3>>& ops, std::vector<int>& ST, std::vector<std::array<int,2>>& query_results, std::vector<std::mutex>& ST_mutexes){
-    while(true){
-        int op_i = fine_op_iter.fetch_add(1);
-        if (op_i >= batch_end){
-            break;
-        }
-
+void fineUpdateWorker(const int num_threads, const int tid, const int batch_start, const int batch_end, const int array_size, const std::vector<std::array<int, 3>>& ops, std::vector<int>& ST, std::vector<std::array<int,2>>& query_results, std::vector<std::mutex>& ST_mutexes){
+    // std::cout << "Thread: " << tid << ", Processing updates: " << batch_start << " to " << batch_end << "\n";
+    for (int op_i = batch_start + tid; op_i < batch_end; op_i += num_threads) {
         auto& op = ops[op_i];
         int i = op[1];
         int x = op[2];
@@ -26,7 +20,7 @@ void fineUpdateWorker(const int batch_end, const int array_size, const std::vect
         int u = i + array_size - 1;
         // lock ST[u]
         ST_mutexes[u].lock();
-        ST[u] = x;
+        ST[u] += x;
         ST_mutexes[u].unlock();
         // unlock ST[u]
         while (u > 0){
@@ -47,24 +41,19 @@ void fineUpdateWorker(const int batch_end, const int array_size, const std::vect
     }
 }
 
-void fineQueryWorker(const int batch_end, const int array_size, const std::vector<std::array<int, 3>>& ops, std::vector<int>& ST, std::vector<std::array<int,2>>& query_results){
-    int query_answer;
+void fineQueryWorker(const int query_offset, const int num_threads, const int tid, const int batch_start, const int batch_end, const int array_size, const std::vector<std::array<int, 3>>& ops, std::vector<int>& ST, std::vector<std::array<int,2>>& query_results){
+    // std::cout << "Thread: " << tid << ", Processing queries: " << batch_start << " to " << batch_end << "\n";
+    int query_answer, local_index, result_index, i, j;
 
-    while(true){
-        /* No lock required because all reads, just need to contend for op_i when done with each individual query*/
-        int op_i = fine_op_iter.fetch_add(1);
-        if (op_i >= batch_end){
-            break;
-        }
-
-        /*We obviously know that each op in this batch is a query*/
+    for (int op_i = batch_start + tid; op_i < batch_end; op_i += num_threads) {
         auto& op = ops[op_i];
-        int i = op[1];
-        int j = op[2];
+        i = op[1];
+        j = op[2];
+        local_index = op_i - batch_start;
+        result_index = query_offset + local_index;
         query_answer = computeSum(0,i,j,0,array_size,ST);
-        query_results[fine_query_iter][OPERATION_INDEX] = op_i;
-        query_results[fine_query_iter][QUERY_ANS] = query_answer;
-        fine_query_iter.fetch_add(1);
+        query_results[result_index][OPERATION_INDEX] = op_i;
+        query_results[result_index][QUERY_ANS] = query_answer;
     }
 }
 
@@ -83,10 +72,9 @@ void runFineImplementation(const int num_ops, const int num_query, const int num
         prev_type = type;
     }
     int num_batches = batch_starts.size();
-    
-    /* Reset atomic counters and mutex size */
-    fine_op_iter = 0;
-    fine_query_iter = 0;
+    /* Could potentially move this code into initialization */
+
+    int query_offset = 0;
     std::vector<std::mutex> ST_mutexes(ST_size);
     std::vector<int> query_answers;
 
@@ -96,22 +84,20 @@ void runFineImplementation(const int num_ops, const int num_query, const int num
         /* Batch start should always be the same as fine_op_iter, just need to pass in batch end to worker functions*/
         /* Reset fine_op_iter at each batch_start because multiple threads could increment fine_op_iter at once */
         int batch_start = batch_starts[batch_iter];
-        fine_op_iter = batch_start;
-        int batch_size = batch_iter == num_batches - 1 ? num_ops - batch_start : batch_starts[batch_iter + 1] - batch_start;
-        int batch_end = batch_start + batch_size;
-        int num_necessary_threads = std::min(num_threads,batch_size);
+        int batch_end = batch_iter == num_batches - 1 ? num_ops : batch_starts[batch_iter + 1];
+        int num_necessary_threads = std::min(num_threads,batch_end - batch_start);
         int batch_type = ops[batch_start][0];
 
         if (batch_type == UPDATE){
             for (int t = 0; t < num_necessary_threads; t++) {
                 /* Pass as reference so that updates occur to the array we input */
-                threads.emplace_back(fineUpdateWorker, batch_end, array_size, std::ref(ops), std::ref(ST), std::ref(query_results), std::ref(ST_mutexes));
+                threads.emplace_back(fineUpdateWorker, num_threads, t, batch_start, batch_end, array_size, std::ref(ops), std::ref(ST), std::ref(query_results), std::ref(ST_mutexes));
             }
         }
         else if(batch_type == QUERY){
             for (int t = 0; t < num_necessary_threads; t++) {
                 /* Pass as reference so that updates occur to the array we input */
-                threads.emplace_back(fineQueryWorker, batch_end, array_size, std::ref(ops), std::ref(ST), std::ref(query_results));
+                threads.emplace_back(fineQueryWorker, query_offset, num_threads, t, batch_start, batch_end, array_size, std::ref(ops), std::ref(ST), std::ref(query_results));
             }
         }
 
@@ -123,5 +109,9 @@ void runFineImplementation(const int num_ops, const int num_query, const int num
             t.join();
         }
         threads.clear();
+
+        if (batch_type == QUERY) {
+            query_offset += batch_end - batch_start;
+        }
     }
 }

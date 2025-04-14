@@ -123,7 +123,7 @@ int main(int argc,char* argv[]){
                 ops[op_i][2] = random_value;
 
                 /* Perform update on array */
-                validation_array[random_index] = random_value;
+                validation_array[random_index] += random_value;
             }
         }
     }

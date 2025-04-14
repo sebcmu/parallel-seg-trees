@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
             fin >> res;
             if (query_results[i][1] != res) {
                 std::cout << "Query " << i << " is incorrect, expected: " << res << ", actual: " << query_results[i][1] << ", Operation Index: " << query_results[i][0] <<"\n";
-                break;
+                // break;
             }
             if (i == num_query - 1) {
                 std::cout << "All query results are valid\n";

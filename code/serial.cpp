@@ -18,7 +18,7 @@ void runSerialImplementation(const int num_ops, const int num_query, const int n
             int i = op[1];
             int x = op[2];
             int u = i + n - 1;
-            ST[u] = x;
+            ST[u] += x;
             while (u > 0){
                 u = parent(u);
                 ST[u] = ST[leftChild(u)] + ST[rightChild(u)];

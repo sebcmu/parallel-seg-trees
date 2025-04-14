@@ -13,6 +13,9 @@ std::mutex ST_mutex;
 std::atomic<int> coarse_op_iter(0);
 std::atomic<int> coarse_query_iter(0);
 
+/* We change this dynamic assignment of operations to a static assignment of operations when going from coarse-grained to fine-grained locking */
+/* This allowed us to remove the atomic variables of op_iter and query_result_iter in the FGL implementation */
+/* We don't care about improving this here because the CGL implementation will always be slow */
 void coarseWorker(const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops, std::vector<int>& ST, std::vector<std::array<int,2>>& query_results){
     int query_answer;
 
@@ -30,7 +33,7 @@ void coarseWorker(const int num_ops, const int array_size, const std::vector<std
             int i = op[1];
             int x = op[2];
             int u = i + array_size - 1;
-            ST[u] = x;
+            ST[u] += x;
             while (u > 0){
                 u = parent(u);
                 ST[u] = ST[leftChild(u)] + ST[rightChild(u)];
