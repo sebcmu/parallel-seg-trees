@@ -11,7 +11,7 @@
 #include "constants.hpp"
 #include "helpers.hpp"
 
-void fineWorker(
+void lockfreeWorker(
     int num_threads, int tid,
     const int array_size, const int levels_saved_arg,
     const std::vector<std::array<int, 3>>& ops,

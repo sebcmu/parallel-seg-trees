@@ -3,7 +3,7 @@ APP_NAME=gen
 OBJS=gen.o
 
 CXX = g++
-CXXFLAGS = -Wall -O3 -std=c++17
+CXXFLAGS = -Wall -O3 -std=c++20
 
 all: $(APP_NAME)
 

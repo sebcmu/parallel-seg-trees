@@ -3,7 +3,7 @@ APP_NAME=rangequery
 OBJS=main.o serial.o coarse.o fine.o helpers.o
 
 CXX = g++
-CXXFLAGS = -Wall -O3 -std=c++17
+CXXFLAGS = -Wall -O3 -std=c++20
 
 all: $(APP_NAME)
 

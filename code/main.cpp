@@ -16,7 +16,7 @@ void runSerialImplementation(const int num_ops, const int num_query, const int n
 void runCoarseImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
     std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
 
-void runFineImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+void runFineImplementation(const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
     std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
 
 int main(int argc, char* argv[]) {
@@ -132,7 +132,8 @@ int main(int argc, char* argv[]) {
     } 
     else if (mode == "fine") {
         std::cout << "[INFO] Running the fine-grained locking implementation...\n";
-        runFineImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads);
+        int levels_saved = 8;
+        runFineImplementation(num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads);
     } 
     else {
         std::cerr << "Error: Unknown mode \"" << mode << "\". Only 'serial' mode is supported.\n";
