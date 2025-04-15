@@ -91,7 +91,9 @@ Our code will be written in C++ due to our familiarity with implementing paralle
   - Testing will include creating graphs for the following:
       - Time versus proportion of queries/updates for all implementations (each implementation would be a different line)
       - Speedup versus number of threads for fine and lockfree implementations
+        - Could have different speedup graphs for different proportions of queries and updates
       - Speedup versus number of top levels handled sequentially (an optimization due to high top level lock contention) for fine and lockfree implementations
+        - Could have different speedup graphs for different proportions of queries and updates
       - Same three graphs as above, but for non-constant combining functions
   - Neo will focus on testing, Seb will focus on poster ideation
 - By 4/28: Finalize final report and submit, finalize poster, have practice run-throughs for presentation
