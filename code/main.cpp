@@ -23,6 +23,7 @@ void runFineImplementation(const int num_ops, const int num_query, const int num
 void runLockFreeImplementation(const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
     std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
 
+void runPrefixCudaImplementation(const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
 
 int main(int argc, char* argv[]) {
     /* Default Parameters */
@@ -150,6 +151,10 @@ int main(int argc, char* argv[]) {
         std::cout << "[INFO] Running the lock-free implementation...\n";
         int levels_saved = 8;
         runLockFreeImplementation(num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads);
+    }
+    else if (mode == "cuda") {
+        std::cout << "[INFO] Running the CUDA prefix sum implementation...\n";
+        runPrefixCudaImplementation(num_ops, array_size, ops, query_results);
     }
     else {
         std::cerr << "Error: Unknown mode \"" << mode << "\".\n";
