@@ -28,6 +28,7 @@ void fineWorker(
     int num_levels = std::log2(array_size) + 1;
     int max_levels_saved = num_levels - 1;
     int levels_saved = std::min(levels_saved_arg,max_levels_saved);
+    /* First x levels correspond to first 2^x-1 array elements*/
     int u_levels_saved = std::pow(2,levels_saved+1) - 1;
 
     while(true){
@@ -60,6 +61,17 @@ void fineWorker(
                     ST_mutexes[u].unlock();
                 }
             }
+            batch_barrier.arrive_and_wait();
+            if (tid == 0){
+                for (int level = levels_saved-1; level >= 0; level--){
+                    int num_nodes = std::pow(2,level);
+                    int start_node = num_nodes - 1;
+                    for (int node = 0; node < num_nodes; node++){
+                        int u = start_node + node;
+                        ST[u] = ST[leftChild(u)] + ST[rightChild(u)];
+                    }
+                }
+            }
         } else if(batch_type == QUERY){
             for (int op_i = batch_start + tid; op_i < batch_end; op_i += num_threads) {
                 const auto& op = ops[op_i];
@@ -72,18 +84,6 @@ void fineWorker(
                 query_results[result_index][QUERY_ANS] = query_answer;
             }
             queries_completed += batch_end - batch_start;
-        }
-
-        batch_barrier.arrive_and_wait();
-        if (tid == 0){
-            for (int level = levels_saved-1; level >= 0; level--){
-                int num_nodes = std::pow(2,level);
-                int start_node = num_nodes - 1;
-                for (int node = 0; node < num_nodes; node++){
-                    int u = start_node + node;
-                    ST[u] = ST[leftChild(u)] + ST[rightChild(u)];
-                }
-            }
         }
         batch_barrier.arrive_and_wait();
         batch_iter++;

@@ -1,6 +1,6 @@
 APP_NAME=rangequery
 
-OBJS=main.o serial.o coarse.o fine.o helpers.o
+OBJS=main.o serial.o coarse.o fine.o lockfree.o helpers.o
 
 CXX = g++
 CXXFLAGS = -Wall -O3 -std=c++20

@@ -7,6 +7,7 @@
 #include <fstream>
 #include <cmath>
 #include <chrono>
+#include <atomic>
 
 #include "constants.hpp"
 
@@ -18,6 +19,10 @@ void runCoarseImplementation(const int num_ops, const int num_query, const int n
 
 void runFineImplementation(const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
     std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
+
+void runLockFreeImplementation(const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
+
 
 int main(int argc, char* argv[]) {
     /* Default Parameters */
@@ -113,8 +118,14 @@ int main(int argc, char* argv[]) {
     array_size = static_cast<int>(std::pow(2, std::ceil(std::log2(orig_array_size))));
     int ST_size = array_size * 2 - 1;
     /* need to fill padded spaces with identity element (eg sum -> 0 (current), max -> -inf, min -> inf) */
-    std::vector<int> ST(ST_size,0);
 
+    /* Is comparing optimizations that use different array types valid? */
+    std::vector<int> ST(ST_size,0);
+    std::atomic<int>* ST_LF = new std::atomic<int>[ST_size];
+    for (int i = 0; i < ST_size; i++){
+        ST_LF[i].store(0,std::memory_order_relaxed);
+    }
+    
     /* Create vector query_results to check queries for correctness */
     std::vector<std::array<int,2>> query_results(num_query);
 
@@ -135,8 +146,13 @@ int main(int argc, char* argv[]) {
         int levels_saved = 8;
         runFineImplementation(num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads);
     } 
+    else if (mode == "lockfree"){
+        std::cout << "[INFO] Running the lock-free implementation...\n";
+        int levels_saved = 8;
+        runLockFreeImplementation(num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads);
+    }
     else {
-        std::cerr << "Error: Unknown mode \"" << mode << "\". Only 'serial' mode is supported.\n";
+        std::cerr << "Error: Unknown mode \"" << mode << "\".\n";
         return 1;
     }
 
@@ -161,6 +177,8 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+
+    delete[] ST_LF;
 
     return 0;
 }
