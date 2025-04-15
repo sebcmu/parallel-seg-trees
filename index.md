@@ -6,7 +6,100 @@ title: Parallelizing Range Queries with Lock-Free SegTrees
 Title: Parallelizing Range Queries with Lock-Free SegTrees  
 Authors: Sebastian Dounchis, Neo Lopez
 
+[Milestone Report PDF](docs/Milestone%20Report%20418.pdf)
 [Project Proposal PDF](docs/Project%20Proposal%20418.pdf)
+
+[Jump to Project Proposal](#project-proposal)
+
+# Milestone Report
+
+## Updated Schedule
+- As of 4/15: We completed all but one of the goals we set for 3/28, 4/4, 4/11, and 4/15
+  - Complete: file structure including Makefile, five distinct implementations (serial, coarse-grained locking, fine-grained locking, CUDA prefix sum, lock-free), testfile generating script, initial rounds of testing
+  - Incomplete: CUDA manual range queries implementation
+- By 4/18: Finish CUDA-based implementations, begin drafting final report, experiment with false-sharing optimizations and prefetching optimizations
+  - Maybe, if this doesn't take too long, we will try to implement prefix sums range querying and manual range querying with ISPC tasks
+  - This would allow comparison of performance versus number of threads, which we wouldn't achieve with CUDA
+  - Neo will focus on final report, Seb will focus on implementation, though we work together for almost every task in this project and will blend roles
+- By 4/22: Continue on final report, finalize all implementations (serial, coarse, fine, lockfree, CUDA prefix sums, CUDA manual range query) for testing
+  - This includes generalizing the code for non-constant combining functions
+  - Neo will focus on final report, Seb will focus on completing implementations
+- By 4/25: Complete testing on PSC machines for important graphs, begin drafting final poster
+  - The specific graphs we will test for are in the “Poster Session” Section
+  - Neo will focus on testing, Seb will focus on poster ideation
+- By 4/28: Finalize final report and submit, finalize poster, have practice run-throughs for presentation
+- By 4/29: Present our final poster
+
+## Progress Summary
+In terms of comparing implementations, we created a main function to parse input arguments and
+a test-case generation function, callable by executables under our file structure. As of April 15th
+we’ve completed serial, coarse-grained locking, fine-grained locking, and compare and swap
+implementations for range queries and updates for the addition operator. This required us to
+consider how to process overlaid updates and queries, which present problems relatable to the
+memory consistency problem. We decided to slightly change the problem into one where
+multiple updates happen then multiple queries happen, as this allows for much more parallelism.
+Additionally, the fine-grained locking and compare and swap implementations have a “levels
+saved” optimization to determine how many levels we compute with locks versus how many
+levels we propagate serially.
+
+We also added a CUDA implementation that uses a prefix sum optimization to significantly
+increase the speed of queries. However, an update to index i in this implementation must
+increment the prefix sums of all subsequent indices, an O(n) problem. Using CUDA threads, we
+have significantly sped this up, allocating each increment to lanes within warps. The CUDA
+implementation still struggles, requiring further optimization to compete with the serial
+implementation.
+
+## Goal Alignment
+In terms of staying aligned with our goals, we have successfully finalized implementations for serial, coarse-grained locking, fine-grained locking, and lock-free seg trees. We are also confident that we will be able to optimize our current CUDA prefix-sum implementation along with creating a CUDA manual range query approach. This set of implementations will contain parallelization within and across operations, another deliverable met from our project proposal. We have already explored different types of padding within our lock-free and fine-grained locking implementations without success. We will further explore padding to avoid false-sharing. Our other “hope to achieve” goals, prefetching and combining update paths, remain as hope to achieve goals. We did touch on combining update paths in the form of the levels saved optimization, though this is not the combination of update paths we had originally thought of. Our main priority after finalizing all implementations will be to rigorously test and analyze each approach across a variety of configurations.
+
+With respect to our testing goals, we have performed initial testing of our finalized implementations as shown in the preliminary results section. We also created a test file generator with the following testfile configuration options: array size, query ratio, number of operations, range of update values about zero (so that we could keep the total sum small), and size of operation chunks. The final option, size of operation chunks, was created to replicate the real-world phenomenon of many updates or queries occurring in a row, or in a chunk. Repetitive operations were needed for parallelism, otherwise the problem is difficult to parallelize with frequently overlapping operations (i.e. some sequence uququququq…). While it may be difficult to test each specific metric we aimed for in our project proposal, we expect to eventually reach all testing goals and will provide an in-depth analysis of approach trade-offs, bottlenecks, and more. 
+
+Goals to Hit Before Poster Session:
+- Finalize CUDA implementations
+- Compare padding vs no padding for lock-free and fine-grained locking approaches
+- Rigorously test, analyze, and discuss performance
+  - Our preliminary testing is an introduction to the type of tests we will run and discussions we will provide in our final project
+  - Research and utilize in-depth profiling techniques to compare implementation performance across different workloads
+    - Including but not limited to: idle time, synchronization stalls, computation time, cache miss stalls
+  - Complete testing and analysis on the GHC and PSC machines
+    - Compare performances across higher thread counts
+
+## Poster Session
+At the poster session, we intend to show many different graphs and justify each trend with a verbal analysis of the tradeoffs relevant in the graph. The most important graphs we’ve identified so far are:
+
+1. Time versus proportion of queries/updates for all implementations with each implementation being a different line
+2. Speedup versus number of threads for the fine and lock free implementations
+3. Speedup versus number of top levels handled sequentially for fine and lock free implementations
+
+Once we implement non-constant combining functions, we could create the same three graphs for these types of workloads as well. Thus, we’d be considering all implementations over all types of combining functions and all query/update proportions. We’ll refer to the graphs as graphs (1), (2), and (3) in the preliminary results.
+
+## Preliminary Results
+We show some preliminary results for the implementations we have so far, recognizing that these implementations could be optimized (in terms of hyperparameter selection, ideal thread count, etc.) before the final report.
+
+We omit the CUDA prefix sum implementation from these graphs as we’re not happy with the time it takes as of now and have barely optimized its implementation.
+
+Here is a graph of (1). We omit the time of the coarse grained implementation (locking over the entire SegTree each operation) since it can be no better than a serial implementation due to lock overhead and because it skewed the y-axis, making other trends seem less significant.
+
+![Figure 1](images/milestone_im1.png)
+
+As the number of queries goes up, the time taken goes down for the FGL and Lock Free implementations and up for the serial implementation. Here, we use 8 threads for both implementations. Queries are read-only operations, so multiple threads can handle queries faster by overlapping them without needing to lock, hence the improvement over the serial implementation for both methods. The lock free implementation is faster than the fine-grained implementation as expected, since we don’t need locks.
+
+Here we showcase (3), the speedup over one level saved for different numbers of levels saved. Levels saved, k, is a hyperparameter that tells the implementation to propagate updates up until the top k levels, then propagate updates serially, level by level, from the kth level upwards.
+
+![Figure 2](images/milestone_im2.png)
+
+The input we were giving has 18 levels (array size is 262144 = 2^18), and the number of threads we used is 8. In this case, the ideal number of levels saved seems to be 14. The general “happy medium” trend reflects a tradeoff between (a) the overhead due to locks, which is higher if the number of levels saved is smaller, and (b) the cost of serially propagating updates upwards, which is smaller if the number of levels saved is smaller. We expect that the best choice for this hyperparameter depends on the number of threads, since this is a problem with contention, as well as the size of the array, since that determines the possible number of levels saved. This is something we’ll have to explore in later testing.
+
+Here we showcase the scalability of each solution, graph (2). Note that this scalability is largely affected by the number of levels saved hyperparameter, since levels closer to the top exhibit the most contention. We decided to save 14 levels, consistent with the preliminary results related to the number of levels saved.
+
+![Figure 3](images/milestone_im3.png)
+
+We see our solution isn’t very close to scaling optimally, though we note it scaled even worse before we added the levels saved hyperparameter. We will never be able to scale optimally because it’s impossible for all updates to occur at once without locks or compare and swap (which will introduce overhead) without risking lost updates. We would like to improve the speedup from 4 to 8 threads as here, we begin to see a smaller slope (in the speedup graph). This could be done with more experimentation with the levels saved parameter, including making it dependent on the number of threads.
+
+## Concerning Issues
+The only concerning issue we face is figuring out how to use profiling techniques to analyze metrics such as idle time, synchronization stalls, computation time, and cache miss stalls. We will use a combination of online research, office hours, and, if necessary, reaching out to instructors to solve this problem. 
+
+# Project Proposal
 
 ## Summary
 We are going to implement parallelized range queries and updates with coarse-grained locking, fine-grained locking and lock-free SegTrees. Then, we will analyze their performance on a diverse set of workloads, adding and comparing optimizations such as prefetching, vectorized instructions, and multi-threaded collaborative updates versus distributing updates across processors.
