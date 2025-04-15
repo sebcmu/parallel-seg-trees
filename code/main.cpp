@@ -32,11 +32,15 @@ int main(int argc, char* argv[]) {
     int validate = 0;
     std::string input_filename = "./inputs/testinputs/simpletest.txt";
     int num_threads = 1;
+    int levels_saved = 1; /* Hyperparameter, determines when to stop using locking and instead use serial propagation up */
 
     /* Read Inputs */
     int opt;
-    while ((opt = getopt(argc, argv, "f:m:t:v")) != -1) {
+    while ((opt = getopt(argc, argv, "l:f:m:t:v")) != -1) {
         switch (opt) {
+            case 'l':
+                levels_saved = atoi(optarg);
+                break;
             case 'f':
                 input_filename = optarg;
                 break;
@@ -144,12 +148,10 @@ int main(int argc, char* argv[]) {
     } 
     else if (mode == "fine") {
         std::cout << "[INFO] Running the fine-grained locking implementation...\n";
-        int levels_saved = 8;
         runFineImplementation(num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads);
     } 
     else if (mode == "lockfree"){
         std::cout << "[INFO] Running the lock-free implementation...\n";
-        int levels_saved = 8;
         runLockFreeImplementation(num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads);
     }
     else if (mode == "cuda") {
