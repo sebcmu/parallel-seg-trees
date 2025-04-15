@@ -11,16 +11,16 @@
 #include <barrier>
 #include "constants.hpp"
 
-__global__ void process_update_batch(int* prefix_sum, const int* i_array, const int* x_array, const int batch_size, const int prefix_sum_size){
+__global__ void process_update_batch(int* prefix_sum, const int* device_ops, const int batch_start, const int batch_size, const int prefix_sum_size){
     int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     int warp_id = thread_id/32;
     int warp_stride = (gridDim.x * blockDim.x + 31) / 32;
     int lane_id = threadIdx.x % 32;
     int lane_stride = 32;
     /* Each warp takes an update, uses lanes to quickly increment positions [i+1,prefix_sum_size) by x*/
-    for (int i = warp_id; i<batch_size; i+=warp_stride){
-        int start_index = i_array[i] + 1;
-        int increment = x_array[i];
+    for (int i = warp_id + batch_start; i<batch_start+batch_size; i+=warp_stride){
+        int start_index = device_ops[3 * i + 1] + 1;
+        int increment = device_ops[3 * i + 2];
         
         /*Each lane takes an increment*/
         for (int j = start_index + lane_id; j < prefix_sum_size; j += lane_stride){
@@ -51,6 +51,11 @@ void runPrefixCudaImplementation(const int num_ops, const int array_size, const 
     cudaMalloc(&device_prefix_sum,prefix_sum_byte_size);
     cudaMemset(device_prefix_sum,0,prefix_sum_byte_size);
 
+    int* device_ops;
+    int ops_byte_size = num_ops * sizeof(std::array<int,3>);
+    cudaMalloc(&device_ops,ops_byte_size);
+    cudaMemcpy(device_ops,&ops[0],ops_byte_size,cudaMemcpyHostToDevice);
+
     std::vector<int> host_prefix_sum(prefix_sum_size);
     int threads_per_block = 256;
 
@@ -60,27 +65,12 @@ void runPrefixCudaImplementation(const int num_ops, const int array_size, const 
         int batch_end = (batch_iter == num_batches-1) ? num_ops : batch_starts[batch_iter+1];
         int batch_type = ops[batch_start][0];
         int batch_size = batch_end - batch_start;
-        int batch_byte_size = batch_size * sizeof(int);
 
         int num_blocks = (batch_size + threads_per_block - 1)/threads_per_block;
 
         if(batch_type == UPDATE){
-            std::vector<int> i_vector(batch_size), x_vector(batch_size);
-            for (int op_i = batch_start; op_i < batch_end; op_i++){
-                int i = op_i - batch_start;
-                i_vector[i] = ops[op_i][1];
-                x_vector[i] = ops[op_i][2];
-            }
-            int* device_i;
-            int* device_x;
-            cudaMalloc(&device_i,batch_size * sizeof(int));
-            cudaMemcpy(device_i,&i_vector[0],batch_byte_size,cudaMemcpyHostToDevice);
-            cudaMalloc(&device_x,batch_size * sizeof(int));
-            cudaMemcpy(device_x,&x_vector[0],batch_byte_size,cudaMemcpyHostToDevice);
-            process_update_batch<<<num_blocks,threads_per_block>>>(device_prefix_sum,device_i,device_x,batch_size,prefix_sum_size);
+            process_update_batch<<<num_blocks,threads_per_block>>>(device_prefix_sum,device_ops,batch_start,batch_size,prefix_sum_size);
             cudaDeviceSynchronize();
-            cudaFree(device_i);
-            cudaFree(device_x);
         }
         else if(batch_type == QUERY){
             cudaMemcpy(&host_prefix_sum[0],device_prefix_sum,prefix_sum_byte_size,cudaMemcpyDeviceToHost);
@@ -94,5 +84,6 @@ void runPrefixCudaImplementation(const int num_ops, const int array_size, const 
         }
     }
     cudaFree(device_prefix_sum);
+    cudaFree(device_ops);
 }
 
