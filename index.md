@@ -78,4 +78,22 @@ Our code will be written in C++ due to our familiarity with implementing paralle
 - By 4/28: Finalize final report and submit, finalize poster, have practice run-throughs for presentation
 - By 4/29: Present our final poster
 
+## Updated Schedule (As of 4/15)
+- As of 4/15: We have completed all the goals we set for 3/28, 4/4, 4/11, and 4/15 except for CUDA-based manual range queries and prefix sum range queries
+- By 4/18: Finish CUDA-based implementations, begin drafting final report, experiment with false-sharing optimizations and prefetching optimizations
+  - Maybe, if this doesn't take too long, we will try to implement prefix sums range querying and manual range querying with ISPC tasks
+  - This would allow comparison of performance versus number of threads, which we wouldn't achieve with CUDA
+  - Neo will focus on final report, Seb will focus on implementation, though we work together and will blend roles
+- By 4/22: Continue on final report, finalize all implementations (serial, coarse, fine, lockfree, CUDA prefix sums, CUDA manual range query) for testing
+  - This includes generalizing the code for non-constant combining functions
+  - Neo will focus on final report, Seb will focus on completing implementations
+- By 4/25: Complete testing on PSC machines for important graphs, begin drafting final poster
+  - Testing will include creating graphs for the following:
+      - Time versus proportion of queries/updates for all implementations (each implementation would be a different line)
+      - Speedup versus number of threads for fine and lockfree implementations
+      - Speedup versus number of top levels handled sequentially (an optimization due to high top level lock contention) for fine and lockfree implementations
+      - Same three graphs as above, but for non-constant combining functions
+  - Neo will focus on testing, Seb will focus on poster ideation
+- By 4/28: Finalize final report and submit, finalize poster, have practice run-throughs for presentation
+- By 4/29: Present our final poster
 
