@@ -25,6 +25,8 @@ void runLockFreeImplementation(const int num_ops, const int num_query, const int
 
 void runPrefixCudaImplementation(const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
 
+void runLevelsCudaImplementation(const int num_ops, const int array_size, const int ST_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
+
 int main(int argc, char* argv[]) {
     /* Default Parameters */
     const auto init_start = std::chrono::steady_clock::now();
@@ -154,9 +156,13 @@ int main(int argc, char* argv[]) {
         std::cout << "[INFO] Running the lock-free implementation...\n";
         runLockFreeImplementation(num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads);
     }
-    else if (mode == "cuda") {
+    else if (mode == "cudaprefix") {
         std::cout << "[INFO] Running the CUDA prefix sum implementation...\n";
         runPrefixCudaImplementation(num_ops, array_size, ops, query_results);
+    }
+    else if (mode == "cudalevels") {
+        std::cout << "[INFO] Running the CUDA level update implementation...\n";
+        runLevelsCudaImplementation(num_ops, array_size, ST_size, ops, query_results);
     }
     else {
         std::cerr << "Error: Unknown mode \"" << mode << "\".\n";
