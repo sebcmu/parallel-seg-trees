@@ -25,7 +25,7 @@ void runLockFreeImplementation(const int num_ops, const int num_query, const int
 
 void runPrefixCudaImplementation(const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
 
-void runLevelsCudaImplementation(const int num_ops, const int array_size, const int ST_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
+void runLevelsCudaImplementation(const int num_ops, const int num_query, const int num_update, const int array_size, const int ST_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
 
 int main(int argc, char* argv[]) {
     /* Default Parameters */
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
     }
     else if (mode == "cudalevels") {
         std::cout << "[INFO] Running the CUDA level update implementation...\n";
-        runLevelsCudaImplementation(num_ops, array_size, ST_size, ops, query_results);
+        runLevelsCudaImplementation(num_ops, num_query, num_update, array_size, ST_size, ops, query_results);
     }
     else {
         std::cerr << "Error: Unknown mode \"" << mode << "\".\n";

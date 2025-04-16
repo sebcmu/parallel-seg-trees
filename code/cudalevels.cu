@@ -35,7 +35,41 @@ __global__ void update_interior_nodes(int* ST, const int* device_ops, const int 
     }
 }
 
-void runLevelsCudaImplementation(const int num_ops, const int array_size, const int ST_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results){
+__device__ int deviceComputeSum(int u, int i, int j, int L, int R, const int* ST) {
+    if (i <= L && R <= j) {
+        return ST[u];
+    }
+    else {
+        int mid = (L + R)/2;
+        if (i >= mid){
+            return deviceComputeSum(2*u+2,i,j,mid,R,ST);
+        }
+        else if (j <= mid){
+            return deviceComputeSum(2*u+1,i,j,L,mid,ST);
+        }
+        else{
+            return deviceComputeSum(2*u+1,i,j,L,mid,ST) + deviceComputeSum(2*u+2,i,j,mid,R,ST);
+        }
+    }
+}
+
+__global__ void process_queries(const int* ST, const int* device_ops, int2* device_query_results, int batch_start, int batch_size, int array_size) {
+    int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (thread_id >= batch_size) return;
+
+    int op_i = batch_start + thread_id;
+    int i = device_ops[3*op_i+1];
+    int j = device_ops[3*op_i+2];
+
+    int sum = deviceComputeSum(0, i, j, 0, array_size, ST);
+    device_query_results[thread_id] = make_int2(op_i, sum);
+}
+
+std::chrono::duration<double> cudalevels_total_query_time(0.0);
+std::chrono::duration<double> cudalevels_total_levels_time(0.0);
+std::chrono::duration<double> cudalevels_total_update_time(0.0);
+
+void runLevelsCudaImplementation(const int num_ops, const int num_query, const int num_update, const int array_size, const int ST_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results){
     std::vector<int> batch_starts;
     batch_starts.push_back(0);
     int prev_type = ops[0][0];
@@ -49,9 +83,15 @@ void runLevelsCudaImplementation(const int num_ops, const int array_size, const 
     }
     int num_batches = batch_starts.size();
 
-    int ST_byte_size = ST_size * sizeof(int);
+    int max_batch_size = 0;
+    for (int b = 0; b < num_batches; ++b) {
+        int start = batch_starts[b];
+        int end   = (b+1 < (int)batch_starts.size() ? batch_starts[b+1] : num_ops);
+        max_batch_size = std::max(max_batch_size, end - start);
+    }
 
     int* device_ST;
+    int ST_byte_size = ST_size * sizeof(int);
     cudaMalloc(&device_ST,ST_byte_size);
     cudaMemset(device_ST,0,ST_byte_size);
 
@@ -60,7 +100,12 @@ void runLevelsCudaImplementation(const int num_ops, const int array_size, const 
     cudaMalloc(&device_ops,ops_byte_size);
     cudaMemcpy(device_ops,&ops[0],ops_byte_size,cudaMemcpyHostToDevice);
 
-    std::vector<int> host_ST(ST_size);
+    int2* device_query_results_buffer;
+    cudaMalloc(&device_query_results_buffer, max_batch_size * sizeof(int2));
+
+    int2* host_query_results_buffer;
+    cudaMallocHost(&host_query_results_buffer, max_batch_size * sizeof(int2));
+    
     int threads_per_block = 256;
 
     int last_level_ind = std::log2(array_size);
@@ -74,25 +119,56 @@ void runLevelsCudaImplementation(const int num_ops, const int array_size, const 
 
         int num_blocks = (batch_size + threads_per_block - 1)/threads_per_block;
 
+        const auto batch_start_time = std::chrono::steady_clock::now();
+
         if(batch_type == UPDATE){
             update_leaf_nodes<<<num_blocks,threads_per_block>>>(device_ST,device_ops,batch_start,batch_size,array_size);
+            const auto levels_start_time = std::chrono::steady_clock::now();
             for (int level = last_level_ind - 1; level >= 0; level--){
                 update_interior_nodes<<<num_blocks,threads_per_block>>>(device_ST,device_ops,batch_start,batch_size,array_size,level);
             }
+            auto levels_end_time = std::chrono::steady_clock::now();
+            std::chrono::duration<double> elapsed = levels_end_time - levels_start_time;
+            cudalevels_total_levels_time += elapsed;
         }
         else if(batch_type == QUERY){
-            cudaMemcpy(&host_ST[0],device_ST,ST_byte_size,cudaMemcpyDeviceToHost);
-            
-            for (int op_i = batch_start; op_i < batch_end; op_i++){
-                int i = ops[op_i][1];
-                int j = ops[op_i][2];
-                int query_answer = computeSum(0,i,j,0,array_size,host_ST);
-                query_results[query_offset] = {op_i,query_answer};
-                query_offset++;
+            process_queries<<<num_blocks, threads_per_block>>>(
+                device_ST,
+                device_ops,
+                device_query_results_buffer,
+                batch_start,
+                batch_size,
+                array_size
+            );
+
+            cudaMemcpy(
+                host_query_results_buffer,
+                device_query_results_buffer,
+                batch_size * sizeof(int2),
+                cudaMemcpyDeviceToHost
+            );
+            for (int t = 0; t < batch_size; ++t) {
+                query_results[query_offset + t] = {host_query_results_buffer[t].x, host_query_results_buffer[t].y};
             }
+            query_offset += batch_size;
+        }
+        auto batch_end_time = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed = batch_end_time - batch_start_time;
+        if (batch_type == UPDATE) {
+            cudalevels_total_update_time += elapsed;
+        } else {
+            cudalevels_total_query_time += elapsed;
         }
     }
+
+    /* Timing code */
+    std::cout << "Total query time: " << cudalevels_total_query_time.count() << " sec" << '\n';
+    std::cout << "Total levels time: " << cudalevels_total_levels_time.count() << " sec" << '\n';
+    std::cout << "Total update time: " << cudalevels_total_update_time.count() << " sec" << '\n';
+
     cudaFree(device_ST);
     cudaFree(device_ops);
+    cudaFree(device_query_results_buffer);
+    cudaFreeHost(host_query_results_buffer);    
 }
 
