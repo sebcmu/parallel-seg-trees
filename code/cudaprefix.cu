@@ -29,18 +29,7 @@ __global__ void process_update_batch(int* prefix_sum, const int* device_ops, con
     }
 }
 
-void runPrefixCudaImplementation(const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results){
-    std::vector<int> batch_starts;
-    batch_starts.push_back(0);
-    int prev_type = ops[0][0];
-    int type = -1;
-    for (int op_i = 1; op_i < num_ops; op_i ++){
-        type = ops[op_i][0];
-        if (type != prev_type){
-            batch_starts.push_back(op_i);
-        }
-        prev_type = type;
-    }
+void runCudaPrefixImplementation(const std::vector<int>& batch_starts, const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results){
     int num_batches = batch_starts.size();
 
     /* PS[i] = prefix sum up to but not including i, so need array_size + 1 spaces to store all info (PS[0] = 0 trivially and does not store info) */

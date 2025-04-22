@@ -7,6 +7,8 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <functional>
+using IntCombine = std::function<int(int,int)>;
 
 int main(int argc,char* argv[]){
     /* Seeding with the time allows randomization */
@@ -26,8 +28,11 @@ int main(int argc,char* argv[]){
     /* We generate around 0 so that the sum doesn't get too large or small */
     float query_ratio = 0.5;
     std::string dir = "testinputs";
+    std::string combine_fn_str = "sum";
+    IntCombine combine_fn = [](int a, int b){return a+b;};
+    
     int opt;
-    while((opt = getopt(argc,argv,"n:o:q:d:f:c:r:")) != -1){
+    while((opt = getopt(argc,argv,"n:o:q:d:f:c:r:p:")) != -1){
         switch (opt){
             case 'n':
                 array_size = atoi(optarg);
@@ -50,6 +55,9 @@ int main(int argc,char* argv[]){
             case 'r':
                 range = atoi(optarg);
                 break;
+            case 'p':
+                combine_fn_str = optarg;
+                break;
             default:
                 std::cerr << "Usage: " << argv[0] << "./gen -n <array_size> -o <num_ops> -c <chunk_size> -r <value_range> -q <query_ratio> -d <output_directory> -f <output_filename>\n";
                 return 1;
@@ -62,12 +70,29 @@ int main(int argc,char* argv[]){
         return 1;
     }
 
+    /* Set Combine Function */
+
+    if(combine_fn_str == "sum"){
+        combine_fn = [](int a, int b){return a+b;};
+    }
+    else if(combine_fn_str == "max"){
+        combine_fn = [](int a, int b){return std::max(a,b);};
+    }
+    else if(combine_fn_str == "min"){
+        combine_fn = [](int a, int b){return std::min(a,b);};
+    }
+    else{
+        /* Default Case If No Match on Combine Function*/
+        combine_fn = [](int a, int b){return a+b;};
+        std::cout << "Combine function input: " << combine_fn_str <<  " did not match an available option. Using sum.";
+    }
+
     /* Code to generate a new file */
     /* Add information about the parameters used to generate the test case */
     std::stringstream q_float_stream;
     q_float_stream << std::fixed << std::setprecision(2) << query_ratio;
     std::string query_rep = q_float_stream.str();
-    std::string altered_filename = filename + "_n_" + std::to_string(array_size) + "_o_" + std::to_string(num_ops) + "_c_" + std::to_string(chunk_size) + "_r_" + std::to_string(range) + "_q_" + query_rep;
+    std::string altered_filename = filename + "_n_" + std::to_string(array_size) + "_o_" + std::to_string(num_ops) + "_c_" + std::to_string(chunk_size) + "_r_" + std::to_string(range) + "_q_" + query_rep + "_p_" + combine_fn_str;
     std::string output_path = dir + "/" + altered_filename + ".txt";
     std::ofstream fout(output_path);
     if (!fout) {
@@ -101,7 +126,7 @@ int main(int argc,char* argv[]){
                 /* Perform the query and append result to query_answers */
                 int query_answer = 0;
                 for (int index = ops[op_i][1]; index < ops[op_i][2]; index++){
-                    query_answer += validation_array[index];
+                    query_answer = combine_fn(query_answer,validation_array[index]);
                 }
                 query_answers.push_back(query_answer);
 
@@ -123,7 +148,7 @@ int main(int argc,char* argv[]){
                 ops[op_i][2] = random_value;
 
                 /* Perform update on array */
-                validation_array[random_index] += random_value;
+                validation_array[random_index] = combine_fn(validation_array[random_index],random_value);
             }
         }
     }

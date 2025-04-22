@@ -11,21 +11,23 @@
 
 #include "constants.hpp"
 
+
+
 void runSerialImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results);
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, IntCombine combine_fn);
 
 void runCoarseImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
 
-void runFineImplementation(const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
+void runFineImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
 
-void runLockFreeImplementation(const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads);
+void runLockFreeImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
 
-void runPrefixCudaImplementation(const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
+void runCudaPrefixImplementation(const std::vector<int>& batch_starts, const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
 
-void runLevelsCudaImplementation(const int num_ops, const int num_query, const int num_update, const int array_size, const int ST_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
+void runCudaLevelsImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int array_size, const int ST_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results, const int combine_type, IntCombine combine_fn);
 
 int main(int argc, char* argv[]) {
     /* Default Parameters */
@@ -35,10 +37,13 @@ int main(int argc, char* argv[]) {
     std::string input_filename = "./inputs/testinputs/simpletest.txt";
     int num_threads = 1;
     int levels_saved = 1; /* Hyperparameter, determines when to stop using locking and instead use serial propagation up */
+    std::string combine_fn_str = "sum";
+    IntCombine combine_fn;
+    int combine_type;
 
     /* Read Inputs */
     int opt;
-    while ((opt = getopt(argc, argv, "l:f:m:t:v")) != -1) {
+    while ((opt = getopt(argc, argv, "l:f:m:t:c:v")) != -1) {
         switch (opt) {
             case 'l':
                 levels_saved = atoi(optarg);
@@ -55,6 +60,9 @@ int main(int argc, char* argv[]) {
             case 't':
                 num_threads = atoi(optarg);
                 break;
+            case 'c':
+                combine_fn_str = optarg;
+                break;
             default:
                 std::cerr << "Usage: " << argv[0] << "./rangequery -m <mode> -f <input_filename> -t <num_threads> [-v]\n";
                 return 1;
@@ -66,6 +74,28 @@ int main(int argc, char* argv[]) {
         std::cerr << "Usage: " << argv[0] << "./rangequery -m <mode> -f <input_filename> -t <num_threads> [-v]\n";;
         return 1;
     }
+
+    /* Set Combine Function*/
+    /* Since cuda cannot take in std::function arguments, must pass a combine type. If adding types of combine functions, must update cudalevels.cu and constants.hpp*/
+    if(combine_fn_str == "sum"){
+        combine_fn = [](int a, int b){return a+b;};
+        combine_type = COMBINE_SUM_FLAG;
+    }
+    else if(combine_fn_str == "max"){
+        combine_fn = [](int a, int b){return std::max(a,b);};
+        combine_type = COMBINE_MAX_FLAG;
+    }
+    else if(combine_fn_str == "min"){
+        combine_fn = [](int a, int b){return std::min(a,b);};
+        combine_type = COMBINE_MIN_FLAG;
+    }
+    else{
+        /* Default Case If No Match on Combine Function*/
+        combine_fn = [](int a, int b){return a+b;};
+        combine_type = COMBINE_SUM_FLAG;
+        std::cout << "Combine function input: " << combine_fn_str <<  " did not match an available option. Using sum.";
+    }
+
 
     /* Parse Input File */
     std::ifstream fin(input_filename);
@@ -87,6 +117,10 @@ int main(int argc, char* argv[]) {
     char type;
     int type_bit = -1;
     int arg1, arg2;
+
+    std::vector<int> batch_starts;
+    batch_starts.push_back(0);
+    int prev_type = ops[0][0];
 
     /* Read Operations */
     /* Assume well-formed files */
@@ -114,6 +148,14 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        /* Populate batch starts */
+        if (op_i >= 1) {
+            if (type_bit != prev_type){
+                batch_starts.push_back(op_i);
+            }
+            prev_type = type_bit;
+        }
+
         /* If nothing is wrong, proceed */
         ops[op_i][0] = type_bit;
         ops[op_i][1] = arg1;
@@ -122,7 +164,10 @@ int main(int argc, char* argv[]) {
 
     /* Building the SegTree */
     /* Check if power of two, if not, round up (fill bits to right then add 1 to turn into 00100....0 i.e. power of 2)*/
+    std::cout << orig_array_size << "\n";
     array_size = static_cast<int>(std::pow(2, std::ceil(std::log2(orig_array_size))));
+
+    std::cout << array_size << "\n";
     int ST_size = array_size * 2 - 1;
     /* need to fill padded spaces with identity element (eg sum -> 0 (current), max -> -inf, min -> inf) */
 
@@ -142,27 +187,29 @@ int main(int argc, char* argv[]) {
     const auto compute_start = std::chrono::steady_clock::now();
     if (mode == "serial") {
         std::cout << "[INFO] Running the serial implementation...\n";
-        runSerialImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results);
+        runSerialImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, combine_fn);
     } 
     else if (mode == "coarse") {
         std::cout << "[INFO] Running the coarse-grained locking implementation...\n";
-        runCoarseImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads);
+        runCoarseImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn);
     } 
     else if (mode == "fine") {
         std::cout << "[INFO] Running the fine-grained locking implementation...\n";
-        runFineImplementation(num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads);
+        runFineImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn);
     } 
     else if (mode == "lockfree"){
         std::cout << "[INFO] Running the lock-free implementation...\n";
-        runLockFreeImplementation(num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads);
+        runLockFreeImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn);
     }
     else if (mode == "cudaprefix") {
+        /* In a prefix sum implementation, we use a "reverse" function (subtraction) to compute queries based off the psums array */
+        /* There is no subtraction equivalent for the other combine functions we use, so we leave out the generalization in prefixSums */
         std::cout << "[INFO] Running the CUDA prefix sum implementation...\n";
-        runPrefixCudaImplementation(num_ops, array_size, ops, query_results);
+        runCudaPrefixImplementation(batch_starts, num_ops, array_size, ops, query_results);
     }
     else if (mode == "cudalevels") {
         std::cout << "[INFO] Running the CUDA level update implementation...\n";
-        runLevelsCudaImplementation(num_ops, num_query, num_update, array_size, ST_size, ops, query_results);
+        runCudaLevelsImplementation(batch_starts, num_ops, num_query, num_update, array_size, ST_size, ops, query_results, combine_type, combine_fn);
     }
     else {
         std::cerr << "Error: Unknown mode \"" << mode << "\".\n";
