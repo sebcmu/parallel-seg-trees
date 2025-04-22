@@ -22,8 +22,20 @@ void runCoarseImplementation(const int num_ops, const int num_query, const int n
 void runFineImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
     std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
 
+void runFinePaddedImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+    PaddedInt* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
+
+void runFinePrefetchImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int prefetch_levels);
+
 void runLockFreeImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
     std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
+
+void runLockFreePaddedImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+    PaddedAtomicInt* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
+
+void runLockFreePrefetchImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
+    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int prefetch_levels);
 
 void runCudaPrefixImplementation(const std::vector<int>& batch_starts, const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
 
@@ -40,10 +52,11 @@ int main(int argc, char* argv[]) {
     std::string combine_fn_str = "sum";
     IntCombine combine_fn;
     int combine_type;
+    int prefetch_levels = 0; /* Hyperparameter, determines how far to prefetch upwards in fine_prefetch and lockfree_prefetch */
 
     /* Read Inputs */
     int opt;
-    while ((opt = getopt(argc, argv, "l:f:m:t:c:v")) != -1) {
+    while ((opt = getopt(argc, argv, "p:l:f:m:t:c:v")) != -1) {
         switch (opt) {
             case 'l':
                 levels_saved = atoi(optarg);
@@ -62,6 +75,9 @@ int main(int argc, char* argv[]) {
                 break;
             case 'c':
                 combine_fn_str = optarg;
+                break;
+            case 'p':
+                prefetch_levels = atoi(optarg);
                 break;
             default:
                 std::cerr << "Usage: " << argv[0] << "./rangequery -m <mode> -f <input_filename> -t <num_threads> [-v]\n";
@@ -164,10 +180,7 @@ int main(int argc, char* argv[]) {
 
     /* Building the SegTree */
     /* Check if power of two, if not, round up (fill bits to right then add 1 to turn into 00100....0 i.e. power of 2)*/
-    std::cout << orig_array_size << "\n";
     array_size = static_cast<int>(std::pow(2, std::ceil(std::log2(orig_array_size))));
-
-    std::cout << array_size << "\n";
     int ST_size = array_size * 2 - 1;
     /* need to fill padded spaces with identity element (eg sum -> 0 (current), max -> -inf, min -> inf) */
 
@@ -176,6 +189,14 @@ int main(int argc, char* argv[]) {
     std::atomic<int>* ST_LF = new std::atomic<int>[ST_size];
     for (int i = 0; i < ST_size; i++){
         ST_LF[i].store(0,std::memory_order_relaxed);
+    }
+    PaddedAtomicInt* ST_LF_PAD = new PaddedAtomicInt[ST_size];
+    for (int i = 0; i < ST_size; i++){
+        ST_LF_PAD[i].value.store(0,std::memory_order_relaxed);
+    }
+    PaddedInt* ST_F_PAD = new PaddedInt[ST_size];
+    for (int i = 0; i < ST_size; i++){
+        ST_F_PAD[i].value = 0;
     }
     
     /* Create vector query_results to check queries for correctness */
@@ -197,9 +218,25 @@ int main(int argc, char* argv[]) {
         std::cout << "[INFO] Running the fine-grained locking implementation...\n";
         runFineImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn);
     } 
+    else if (mode == "fine_padded") {
+        std::cout << "[INFO] Running the fine-grained locking padded implementation...\n";
+        runFinePaddedImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_F_PAD, array_size, orig_array_size, query_results, num_threads, combine_fn);
+    } 
+    else if (mode == "fine_prefetch") {
+        std::cout << "[INFO] Running the fine-grained locking prefetch implementation...\n";
+        runFinePrefetchImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn, prefetch_levels);
+    } 
     else if (mode == "lockfree"){
         std::cout << "[INFO] Running the lock-free implementation...\n";
         runLockFreeImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn);
+    }
+    else if (mode == "lockfree_padded"){
+        std::cout << "[INFO] Running the lock-free padded implementation...\n";
+        runLockFreePaddedImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF_PAD, array_size, orig_array_size, query_results, num_threads, combine_fn);
+    }
+    else if (mode == "lockfree_prefetch"){
+        std::cout << "[INFO] Running the lock-free prefetch implementation...\n";
+        runLockFreePrefetchImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn, prefetch_levels);
     }
     else if (mode == "cudaprefix") {
         /* In a prefix sum implementation, we use a "reverse" function (subtraction) to compute queries based off the psums array */
@@ -218,9 +255,9 @@ int main(int argc, char* argv[]) {
 
     const double compute_time = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - compute_start).count();
 
-    std::cout << "Initialization time (sec): " << std::fixed << std::setprecision(5) << init_time << '\n';
-    std::cout << "Computation time (sec): " << std::fixed << std::setprecision(5) << compute_time << '\n';
-    std::cout << "Total time (sec): " << std::fixed << std::setprecision(5) << compute_time + init_time << '\n';
+    std::cout << "Init (sec): " << std::fixed << std::setprecision(5) << init_time << '\n';
+    std::cout << "Comp (sec): " << std::fixed << std::setprecision(5) << compute_time << '\n';
+    std::cout << "Tot  (sec): " << std::fixed << std::setprecision(5) << compute_time + init_time << '\n';
     
 
     /* CHECK queries if validate flag is on */
@@ -239,6 +276,8 @@ int main(int argc, char* argv[]) {
     }
 
     delete[] ST_LF;
+    delete[] ST_LF_PAD;
+    delete[] ST_F_PAD;
 
     return 0;
 }

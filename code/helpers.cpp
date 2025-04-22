@@ -79,3 +79,39 @@ int lockFreeComputeSumCombine(int u, int i, int j, int L, int R, std::atomic<int
         }
     }
 }
+
+int lockFreePaddedComputeSumCombine(int u, int i, int j, int L, int R, PaddedAtomicInt* ST, IntCombine combine_fn){
+    if (i <= L && R <= j){
+        return ST[u].value;
+    }
+    else {
+        int mid = (L + R)/2;
+        if (i >= mid){
+            return lockFreePaddedComputeSumCombine(rightChild(u),i,j,mid,R,ST,combine_fn);
+        }
+        else if (j <= mid){
+            return lockFreePaddedComputeSumCombine(leftChild(u),i,j,L,mid,ST,combine_fn);
+        }
+        else{
+            return combine_fn(lockFreePaddedComputeSumCombine(leftChild(u),i,j,L,mid,ST,combine_fn),lockFreePaddedComputeSumCombine(rightChild(u),i,j,mid,R,ST,combine_fn));
+        }
+    }
+}
+
+int finePaddedComputeSumCombine(int u, int i, int j, int L, int R, PaddedInt* ST, IntCombine combine_fn){
+    if (i <= L && R <= j){
+        return ST[u].value;
+    }
+    else {
+        int mid = (L + R)/2;
+        if (i >= mid){
+            return finePaddedComputeSumCombine(rightChild(u),i,j,mid,R,ST,combine_fn);
+        }
+        else if (j <= mid){
+            return finePaddedComputeSumCombine(leftChild(u),i,j,L,mid,ST,combine_fn);
+        }
+        else{
+            return combine_fn(finePaddedComputeSumCombine(leftChild(u),i,j,L,mid,ST,combine_fn),finePaddedComputeSumCombine(rightChild(u),i,j,mid,R,ST,combine_fn));
+        }
+    }
+}

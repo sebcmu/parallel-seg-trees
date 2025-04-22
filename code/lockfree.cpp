@@ -79,18 +79,17 @@ void lockFreeWorker(
                 }
             }
             batch_barrier.arrive_and_wait();
-            if (tid == 0){
-                for (int level = levels_saved-1; level >= 0; level--){
-                    int num_nodes = std::pow(2,level);
-                    int start_node = num_nodes - 1;
-                    for (int node = 0; node < num_nodes; node++){
-                        int u = start_node + node;
-                        ST[u].store(
-                            combine_fn(ST[leftChild(u)].load(std::memory_order_relaxed),ST[rightChild(u)].load(std::memory_order_relaxed)),
-                            std::memory_order_relaxed
-                        );
-                    }
+            for (int level = levels_saved-1; level >= 0; level--){
+                int num_nodes = std::pow(2,level);
+                int start_node = num_nodes - 1;
+                for (int node = tid; node < num_nodes; node+=num_threads){
+                    int u = start_node + node;
+                    ST[u].store(
+                        combine_fn(ST[leftChild(u)].load(std::memory_order_relaxed),ST[rightChild(u)].load(std::memory_order_relaxed)),
+                        std::memory_order_relaxed
+                    );
                 }
+                batch_barrier.arrive_and_wait();
             }
         } else if (batch_type == QUERY){
             for (int op_i = batch_start + tid; op_i < batch_end; op_i += num_threads) {

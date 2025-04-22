@@ -32,8 +32,6 @@ void fineWorker(
     /* First x levels correspond to first 2^x-1 array elements*/
     int u_levels_saved = std::pow(2,levels_saved+1) - 1;
 
-    std::cout << u_levels_saved << "\n";
-
     while(true){
         if (batch_iter >= num_batches){
             break;
