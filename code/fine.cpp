@@ -11,11 +11,6 @@
 #include "constants.hpp"
 #include "helpers.hpp"
 
-/* Timing code */
-std::chrono::duration<double> fine_total_query_time(0.0);
-std::chrono::duration<double> fine_total_levels_time(0.0);
-std::chrono::duration<double> fine_total_update_time(0.0);
-
 void fineWorker(
     int num_threads, int tid,
     const int array_size, const int levels_saved_arg,
@@ -42,12 +37,6 @@ void fineWorker(
     while(true){
         if (batch_iter >= num_batches){
             break;
-        }
-
-        /* Timing code */
-        std::chrono::steady_clock::time_point batch_start_time;
-        if (tid == 0) {
-            batch_start_time = std::chrono::steady_clock::now();
         }
 
         int batch_start = batch_starts[batch_iter];
@@ -78,9 +67,7 @@ void fineWorker(
                 }
             }
             batch_barrier.arrive_and_wait();
-            std::chrono::steady_clock::time_point levels_start_time;
             if (tid == 0){
-                levels_start_time = std::chrono::steady_clock::now();
                 for (int level = levels_saved-1; level >= 0; level--){
                     int num_nodes = std::pow(2,level);
                     int start_node = num_nodes - 1;
@@ -90,8 +77,6 @@ void fineWorker(
                         ST[u] = combine_fn(ST[leftChild(u)],ST[rightChild(u)]);
                     }
                 }
-                auto levels_end_time = std::chrono::steady_clock::now();
-                fine_total_levels_time += levels_end_time - levels_start_time;
             }
         } else if(batch_type == QUERY){
             for (int op_i = batch_start + tid; op_i < batch_end; op_i += num_threads) {
@@ -109,16 +94,6 @@ void fineWorker(
         
         batch_barrier.arrive_and_wait();
         batch_iter++;
-        /* Timing code */
-        if (tid == 0) {
-            auto batch_end_time = std::chrono::steady_clock::now();
-            std::chrono::duration<double> elapsed = batch_end_time - batch_start_time;
-            if (batch_type == QUERY) {
-                fine_total_query_time += elapsed;
-            } else if (batch_type == UPDATE) {
-                fine_total_update_time += elapsed;
-            }
-        }
     }
 }
 
@@ -138,9 +113,4 @@ void runFineImplementation(const std::vector<int>& batch_starts, const int num_o
     for(auto &t: threads){
         t.join();
     }
-
-    /* Timing code */
-    std::cout << "Total query time: " << fine_total_query_time.count() << " sec" << '\n';
-    std::cout << "Total levels time: " << fine_total_levels_time.count() << " sec" << '\n';
-    std::cout << "Total update time: " << fine_total_update_time.count() << " sec" << '\n';
 }
