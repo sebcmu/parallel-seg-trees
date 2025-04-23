@@ -40,12 +40,10 @@ void runCudaPrefixImplementation(const std::vector<int>& batch_starts, const int
 
 void runCudaLevelsImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int array_size, const int ST_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results, const int combine_type, IntCombine combine_fn);
 
-std::tuple<double, double> run(const int num_threads, const int orig_array_size, const int num_query, const int num_update, const int num_ops, const std::vector<std::array<int, 3>>& ops, const std::vector<int>& batch_starts, IntCombine combine_fn, const int combine_type, const int prefetch_levels, const int levels_saved, std::string mode, const int individual_report, const int validate, const std::vector<int>& expected_query_results) {
+std::tuple<double, double> run(const int num_threads, const int array_size, const int orig_array_size, const int num_query, const int num_update, const int num_ops, const std::vector<std::array<int, 3>>& ops, const std::vector<int>& batch_starts, IntCombine combine_fn, const int combine_type, const int prefetch_levels, const int levels_saved, std::string mode, const int individual_report, const int validate, const std::vector<int>& expected_query_results) {
     const auto run_init_start = std::chrono::steady_clock::now();
 
     /* Building the SegTree */
-    /* Check if power of two, if not, round up (fill bits to right then add 1 to turn into 00100....0 i.e. power of 2)*/
-    int array_size = static_cast<int>(std::pow(2, std::ceil(std::log2(orig_array_size))));
     int ST_size = array_size * 2 - 1;
     /* need to fill padded spaces with identity element (eg sum -> 0 (current), max -> -inf, min -> inf) */
 
@@ -149,19 +147,21 @@ std::tuple<double, double> run(const int num_threads, const int orig_array_size,
 int main(int argc, char* argv[]) {
     const auto init_start = std::chrono::steady_clock::now();
 
-    /* Default Parameters */
     /* Use ./rangequery -h for more information */
+    /* Default Parameters */
     int num_runs = 1;
     std::string mode = "serial";
     int validate = 0;
     int individual_report = 0;
     std::string input_filename = "./inputs/testinputs/simpletest.txt";
     int num_threads = 1;
-    int levels_saved = 1; /* Hyperparameter, determines when to stop using locking and instead use serial propagation up */
     std::string combine_fn_str = "sum";
     IntCombine combine_fn;
     int combine_type;
-    int prefetch_levels = 0; /* Hyperparameter, determines how far to prefetch upwards in fine_prefetch and lockfree_prefetch */
+
+    /* Hyperparameters */
+    int levels_saved = -1; /* Determines when to stop using locking and instead use serial propagation up */
+    int prefetch_levels = 0; /* Determines how far to prefetch upwards in fine_prefetch and lockfree_prefetch */
 
     /* Read Inputs */
     int opt;
@@ -242,6 +242,13 @@ int main(int argc, char* argv[]) {
     fin >> orig_array_size >> num_update >> num_query;
     int num_ops = num_query + num_update;
 
+    int array_size = static_cast<int>(std::pow(2, std::ceil(std::log2(orig_array_size))));
+
+    /* Setting levels_saved if it is unset according to what we found in testing */
+    if (levels_saved == -1) {
+        levels_saved = std::log2(array_size) - 2;
+    }
+
     
     std::vector<std::array<int,3>> ops(num_ops);
     char type;
@@ -306,7 +313,7 @@ int main(int argc, char* argv[]) {
 
     double total_run_init = 0.0, total_run_comp = 0.0;
     for (int i = 0; i < num_runs; i++) {
-        auto [run_init_time, run_comp_time] = run(num_threads, orig_array_size, num_query, num_update, num_ops, ops, batch_starts, combine_fn, combine_type, prefetch_levels, levels_saved, mode, individual_report, validate, expected_query_results);
+        auto [run_init_time, run_comp_time] = run(num_threads, array_size, orig_array_size, num_query, num_update, num_ops, ops, batch_starts, combine_fn, combine_type, prefetch_levels, levels_saved, mode, individual_report, validate, expected_query_results);
         total_run_init += run_init_time;
         total_run_comp += run_comp_time;
     }
