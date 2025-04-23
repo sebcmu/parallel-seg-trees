@@ -245,8 +245,10 @@ int main(int argc, char* argv[]) {
     int array_size = static_cast<int>(std::pow(2, std::ceil(std::log2(orig_array_size))));
 
     /* Setting levels_saved if it is unset according to what we found in testing */
-    if (levels_saved == -1) {
+    if (levels_saved == -1 && (mode == "fine" || mode == "fine_prefetch" || mode == "fine_padded")) {
         levels_saved = std::log2(array_size) - 2;
+    } else if (levels_saved == -1 && (mode == "lockfree" || mode == "lockfree_prefetch" || mode == "lockfree_padded")) {
+        levels_saved = std::log2(array_size) - 4;
     }
 
     

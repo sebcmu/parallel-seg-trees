@@ -27,7 +27,7 @@ void fineWorker(
     int num_batches = batch_starts.size();
     int num_levels = std::log2(array_size) + 1;
     int max_levels_saved = num_levels - 1;
-    int levels_saved = std::min(levels_saved_arg,max_levels_saved);
+    int levels_saved = std::max(0,std::min(levels_saved_arg,max_levels_saved));
     int u_levels_saved = std::pow(2,levels_saved+1) - 1;
 
     while(true){
