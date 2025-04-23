@@ -27,4 +27,6 @@ const int COMBINE_SUM_FLAG = 0;
 const int COMBINE_MAX_FLAG = 1;
 const int COMBINE_MIN_FLAG = 2;
 
+const int CONTIGUOUS_UPDATES_PER_THREAD = 8;
+
 #endif

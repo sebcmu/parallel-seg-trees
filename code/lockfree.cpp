@@ -79,6 +79,7 @@ void lockFreeWorker(
                 }
             }
             batch_barrier.arrive_and_wait();
+            // HERE 1
             for (int level = levels_saved-1; level >= 0; level--){
                 int num_nodes = std::pow(2,level);
                 int start_node = num_nodes - 1;
@@ -91,6 +92,25 @@ void lockFreeWorker(
                 }
                 batch_barrier.arrive_and_wait();
             }
+            // for (int level = levels_saved-1; level >= 0; level--){
+            //     int num_nodes = std::pow(2,level);
+            //     int start_node = num_nodes - 1;
+            //     for (int node = 0; node < num_nodes; node += CONTIGUOUS_UPDATES_PER_THREAD * num_threads) {
+            //         /* 16 contiguous updates per thread ensures locality */
+            //         for (int node_i = node + CONTIGUOUS_UPDATES_PER_THREAD * tid; node_i < std::min(node + CONTIGUOUS_UPDATES_PER_THREAD * (tid+1), num_nodes); node_i++) {
+            //             int u = start_node + node_i;
+            //             /* All of these writes will be to one or two cache lines (depending on alignment) */
+            //             /* All of the reads will be contiguous sections */
+            //             ST[u].store(
+            //                 combine_fn(ST[leftChild(u)].load(std::memory_order_relaxed),ST[rightChild(u)].load(std::memory_order_relaxed)),
+            //                 std::memory_order_relaxed
+            //             );
+            //         }
+            //     }
+            //     batch_barrier.arrive_and_wait();
+            // }
+
+            // HERE 2
         } else if (batch_type == QUERY){
             for (int op_i = batch_start + tid; op_i < batch_end; op_i += num_threads) {
                 const auto& op = ops[op_i];
