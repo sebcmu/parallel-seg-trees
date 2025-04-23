@@ -32,41 +32,41 @@ int main(int argc,char* argv[]){
     IntCombine combine_fn = [](int a, int b){return a+b;};
     
     int opt;
-    while((opt = getopt(argc,argv,"n:o:q:d:f:c:r:p:")) != -1){
+    while((opt = getopt(argc,argv,"n:o:q:d:f:c:r:p:h")) != -1){
         switch (opt){
-            case 'n':
-                array_size = atoi(optarg);
-                break;
-            case 'o':
-                num_ops = atoi(optarg);
-                break;
-            case 'q':
-                query_ratio = atof(optarg);
-                break;
-            case 'd':
-                dir = optarg;
-                break;
-            case 'f':
-                filename = optarg;
-                break;
-            case 'c':
-                chunk_size = atoi(optarg);
-                break;
-            case 'r':
-                range = atoi(optarg);
-                break;
-            case 'p':
-                combine_fn_str = optarg;
-                break;
+            /* Logistical parameters */
+            case 'd': dir = optarg;                             break;
+            case 'f': filename = optarg;                        break;1048576
+            /* Details */
+            case 'n': array_size = atoi(optarg);                break;
+            case 'o': num_ops = atoi(optarg);                   break;
+            case 'q': query_ratio = atof(optarg);               break;
+            case 'c': chunk_size = atoi(optarg);                break;
+            case 'r': range = atoi(optarg);                     break;
+            /* Special uses */
+            case 'p': combine_fn_str = optarg;                  break;
+            /* Help */
+            case 'h':
+                std::cout << "./gen\n";
+                std::cout << std::left;
+                std::cout << std::setw(35) << "  -d <output_directory>"     << "Defines the output directory\n";
+                std::cout << std::setw(35) << "  -f <output_filename>"    << "Defines the output file name\n";
+                std::cout << std::setw(35) << "  -n <array_size>"         << "Size of the array\n";
+                std::cout << std::setw(35) << "  -o <num_ops>"            << "Number of operations (update, query) to apply to the array\n";
+                std::cout << std::setw(35) << "  -q <query_ratio>"        << "Proportion of operations that are queries\n";
+                std::cout << std::setw(35) << "  -c <chunk_size>"         << "Size of operation chunks (must divide the number of operations) \n";
+                std::cout << std::setw(35) << "  -r <range>"              << "Generates updates in (-range,range)\n";
+                std::cout << std::setw(35) << "  -p <combine_fn_string>"  << "String of the combining function (Options: sum, max, min)\n";
+                return 1;
             default:
-                std::cerr << "Usage: " << argv[0] << "./gen -n <array_size> -o <num_ops> -c <chunk_size> -r <value_range> -q <query_ratio> -d <output_directory> -f <output_filename>\n";
+                std::cerr << "Usage Help: ./gen -h\n";
                 return 1;
         }
     }
 
-    // Check if required options are provided
+    /* Check if required options are provided */
     if (empty(filename) || array_size <= 0 || num_ops <= 0 || query_ratio <= 0 || query_ratio >= 1 || num_ops % chunk_size != 0) {
-        std::cerr << "Usage: " << argv[0] << "./gen -n <array_size> -o <num_ops> -c <chunk_size> -r <value_range> -q <query_ratio> -d <output_directory> -f <output_filename> (-n, -o, -f are required, -n -o must be > 0, -q must be between 0 and 1 exclusive, chunk_size must divide num_ops)\n";;
+        std::cerr << "Usage Help: ./gen -h\n";;
         return 1;
     }
 
@@ -82,7 +82,7 @@ int main(int argc,char* argv[]){
         combine_fn = [](int a, int b){return std::min(a,b);};
     }
     else{
-        /* Default Case If No Match on Combine Function*/
+        /* Default Case If No Match on Combine Function */
         combine_fn = [](int a, int b){return a+b;};
         std::cout << "Combine function input: " << combine_fn_str <<  " did not match an available option. Using sum.";
     }

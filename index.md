@@ -7,6 +7,7 @@ Title: Parallelizing Range Queries with Lock-Free SegTrees
 Authors: Sebastian Dounchis, Neo Lopez
 
 [Milestone Report PDF](docs/Milestone%20Report%20418.pdf)
+
 [Project Proposal PDF](docs/Project%20Proposal%20418.pdf)
 
 [Jump to Project Proposal](#project-proposal)
@@ -80,19 +81,19 @@ We omit the CUDA prefix sum implementation from these graphs as we’re not happ
 
 Here is a graph of (1). We omit the time of the coarse grained implementation (locking over the entire SegTree each operation) since it can be no better than a serial implementation due to lock overhead and because it skewed the y-axis, making other trends seem less significant.
 
-![Figure 1](images/milestone_im1.png)
+![Milestone Figure 1](images/milestone_im1.png)
 
 As the number of queries goes up, the time taken goes down for the FGL and Lock Free implementations and up for the serial implementation. Here, we use 8 threads for both implementations. Queries are read-only operations, so multiple threads can handle queries faster by overlapping them without needing to lock, hence the improvement over the serial implementation for both methods. The lock free implementation is faster than the fine-grained implementation as expected, since we don’t need locks.
 
 Here we showcase (3), the speedup over one level saved for different numbers of levels saved. Levels saved, k, is a hyperparameter that tells the implementation to propagate updates up until the top k levels, then propagate updates serially, level by level, from the kth level upwards.
 
-![Figure 2](images/milestone_im2.png)
+![Milestone Figure 2](images/milestone_im2.png)
 
 The input we were giving has 18 levels (array size is 262144 = 2^18), and the number of threads we used is 8. In this case, the ideal number of levels saved seems to be 14. The general “happy medium” trend reflects a tradeoff between (a) the overhead due to locks, which is higher if the number of levels saved is smaller, and (b) the cost of serially propagating updates upwards, which is smaller if the number of levels saved is smaller. We expect that the best choice for this hyperparameter depends on the number of threads, since this is a problem with contention, as well as the size of the array, since that determines the possible number of levels saved. This is something we’ll have to explore in later testing.
 
 Here we showcase the scalability of each solution, graph (2). Note that this scalability is largely affected by the number of levels saved hyperparameter, since levels closer to the top exhibit the most contention. We decided to save 14 levels, consistent with the preliminary results related to the number of levels saved.
 
-![Figure 3](images/milestone_im3.png)
+![Milestone Figure 3](images/milestone_im3.png)
 
 We see our solution isn’t very close to scaling optimally, though we note it scaled even worse before we added the levels saved hyperparameter. We will never be able to scale optimally because it’s impossible for all updates to occur at once without locks or compare and swap (which will introduce overhead) without risking lost updates. We would like to improve the speedup from 4 to 8 threads as here, we begin to see a smaller slope (in the speedup graph). This could be done with more experimentation with the levels saved parameter, including making it dependent on the number of threads.
 

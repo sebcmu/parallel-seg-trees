@@ -8,6 +8,7 @@
 #include <cmath>
 #include <chrono>
 #include <atomic>
+#include <iomanip>
 
 #include "constants.hpp"
 
@@ -39,7 +40,7 @@ void runCudaPrefixImplementation(const std::vector<int>& batch_starts, const int
 
 void runCudaLevelsImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int array_size, const int ST_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results, const int combine_type, IntCombine combine_fn);
 
-std::tuple<double, double> run(const int num_threads, const int orig_array_size, const int num_query, const int num_update, const int num_ops, const std::vector<std::array<int, 3>>& ops, const std::vector<int>& batch_starts, IntCombine combine_fn, const int combine_type, const int prefetch_levels, const int levels_saved, std::string mode, const int validate, const std::vector<int>& expected_query_results) {
+std::tuple<double, double> run(const int num_threads, const int orig_array_size, const int num_query, const int num_update, const int num_ops, const std::vector<std::array<int, 3>>& ops, const std::vector<int>& batch_starts, IntCombine combine_fn, const int combine_type, const int prefetch_levels, const int levels_saved, std::string mode, const int individual_report, const int validate, const std::vector<int>& expected_query_results) {
     const auto run_init_start = std::chrono::steady_clock::now();
 
     /* Building the SegTree */
@@ -71,67 +72,68 @@ std::tuple<double, double> run(const int num_threads, const int orig_array_size,
     /* Begin computation */
     const auto run_compute_start = std::chrono::steady_clock::now();
     if (mode == "serial") {
-        std::cout << "[INFO] Running the serial implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the serial implementation...\n";}
         runSerialImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, combine_fn);
     } 
     else if (mode == "coarse") {
-        std::cout << "[INFO] Running the coarse-grained locking implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the coarse-grained locking implementation...\n";}
         runCoarseImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn);
     } 
     else if (mode == "fine") {
-        std::cout << "[INFO] Running the fine-grained locking implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the fine-grained locking implementation...\n";}
         runFineImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn);
     } 
     else if (mode == "fine_padded") {
-        std::cout << "[INFO] Running the fine-grained locking padded implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the fine-grained locking padded implementation...\n";}
         runFinePaddedImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_F_PAD, array_size, orig_array_size, query_results, num_threads, combine_fn);
     } 
     else if (mode == "fine_prefetch") {
-        std::cout << "[INFO] Running the fine-grained locking prefetch implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the fine-grained locking prefetch implementation...\n";}
         runFinePrefetchImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn, prefetch_levels);
     } 
     else if (mode == "lockfree"){
-        std::cout << "[INFO] Running the lock-free implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the lock-free implementation...\n";}
         runLockFreeImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn);
     }
     else if (mode == "lockfree_padded"){
-        std::cout << "[INFO] Running the lock-free padded implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the lock-free padded implementation...\n";}
         runLockFreePaddedImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF_PAD, array_size, orig_array_size, query_results, num_threads, combine_fn);
     }
     else if (mode == "lockfree_prefetch"){
-        std::cout << "[INFO] Running the lock-free prefetch implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the lock-free prefetch implementation...\n";}
         runLockFreePrefetchImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn, prefetch_levels);
     }
     else if (mode == "cudaprefix") {
         /* In a prefix sum implementation, we use a "reverse" function (subtraction) to compute queries based off the psums array */
         /* There is no subtraction equivalent for the other combine functions we use, so we leave out the generalization in prefixSums */
-        std::cout << "[INFO] Running the CUDA prefix sum implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the CUDA prefix sum implementation...\n";}
         runCudaPrefixImplementation(batch_starts, num_ops, array_size, ops, query_results);
     }
     else if (mode == "cudalevels") {
-        std::cout << "[INFO] Running the CUDA level update implementation...\n";
+        if (individual_report) {std::cout << "[INFO] Running the CUDA level update implementation...\n";}
         runCudaLevelsImplementation(batch_starts, num_ops, num_query, num_update, array_size, ST_size, ops, query_results, combine_type, combine_fn);
     }
     else {
-        std::cerr << "Error: Unknown mode \"" << mode << "\".\n";
+        if (individual_report) {std::cerr << "Error: Unknown mode \"" << mode << "\".\n";}
         return {0.0, 0.0};
     }
 
     const double run_compute_time = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - run_compute_start).count();
 
-    std::cout << "Init (sec): " << std::fixed << std::setprecision(5) << run_init_time << '\n';
-    std::cout << "Comp (sec): " << std::fixed << std::setprecision(5) << run_compute_time << '\n';
-    std::cout << "Tot  (sec): " << std::fixed << std::setprecision(5) << run_compute_time + run_init_time << '\n';
-    
+    if (individual_report) {
+        std::cout << "Init (sec): " << std::fixed << std::setprecision(5) << run_init_time << '\n';
+        std::cout << "Comp (sec): " << std::fixed << std::setprecision(5) << run_compute_time << '\n';
+        std::cout << "Tot  (sec): " << std::fixed << std::setprecision(5) << run_compute_time + run_init_time << '\n';
+    }
 
     /* CHECK queries if validate flag is on */
     if (validate){
         for (int i = 0; i < num_query; i++){
             if (query_results[i][1] != expected_query_results[i]) {
                 std::cout << "Query " << i << " is incorrect, expected: " << expected_query_results[i] << ", actual: " << query_results[i][1] << ", Operation Index: " << query_results[i][0] <<"\n";
-                // break;
+                break;
             }
-            if (i == num_query - 1) {
+            if ((i == num_query - 1) && individual_report) {
                 std::cout << "All query results are valid\n";
             }
         }
@@ -145,11 +147,14 @@ std::tuple<double, double> run(const int num_threads, const int orig_array_size,
 }
 
 int main(int argc, char* argv[]) {
-    /* Default Parameters */
     const auto init_start = std::chrono::steady_clock::now();
+
+    /* Default Parameters */
+    /* Use ./rangequery -h for more information */
     int num_runs = 1;
     std::string mode = "serial";
     int validate = 0;
+    int individual_report = 0;
     std::string input_filename = "./inputs/testinputs/simpletest.txt";
     int num_threads = 1;
     int levels_saved = 1; /* Hyperparameter, determines when to stop using locking and instead use serial propagation up */
@@ -160,25 +165,43 @@ int main(int argc, char* argv[]) {
 
     /* Read Inputs */
     int opt;
-    while ((opt = getopt(argc, argv, "i:p:l:f:m:t:c:v")) != -1) {
+    while ((opt = getopt(argc, argv, "i:p:l:f:m:t:c:vrh")) != -1) {
         switch (opt) {
-            case 'l': levels_saved = atoi(optarg);              break;
+            /* Logistical parameters */
             case 'f': input_filename = optarg;                  break;
             case 'm': mode = optarg;                            break;
-            case 'v': validate = 1;                             break;
             case 't': num_threads = atoi(optarg);               break;
+            case 'i': num_runs = atoi(optarg);                  break;
+            /* Details */
+            case 'r': individual_report = 1;                    break;
+            case 'v': validate = 1;                             break;
+            /* Special uses and hyperparameters */
             case 'c': combine_fn_str = optarg;                  break;
             case 'p': prefetch_levels = atoi(optarg);           break;
-            case 'i': num_runs = atoi(optarg);                  break;
+            case 'l': levels_saved = atoi(optarg);              break;
+            /* Help */
+            case 'h':
+                std::cout << "./rangequery\n";
+                std::cout << std::left;
+                std::cout << std::setw(35) << "  -f <input_filename>"     << "Defines the input file name\n";
+                std::cout << std::setw(35) << "  -m <mode>"               << "Defines the mode to use (Options: serial, coarse, fine, lockfree, cudaprefix, cudalevels, fine_padded, lockfree_padded, fine_prefetch, lockfree_prefetch)\n";
+                std::cout << std::setw(35) << "  -t <num_threads>"        << "Number of threads to use\n";
+                std::cout << std::setw(35) << "  -i <num_runs>"           << "Number of runs to average run performance over\n";
+                std::cout << std::setw(35) << "  -r"                      << "Enable performance report for individual runs\n";
+                std::cout << std::setw(35) << "  -v"                      << "Enable validation of query results\n";
+                std::cout << std::setw(35) << "  -c <combine_fn_string>"  << "String of the combining function (Options: sum, max, min)\n";
+                std::cout << std::setw(35) << "  -p <prefetch_levels>"    << "Number of levels to prefetch in *_prefetch modes\n";
+                std::cout << std::setw(35) << "  -l <saved_levels>"       << "Levels saved before switching to serial update in fine and lockfree modes\n";
+                return 1;
             default:
-                std::cerr << "Usage: " << argv[0] << "./rangequery -m <mode> -f <input_filename> -t <num_threads> [-v] [-l <levels_saved>] [-c <combine_fn_str>] [-p <prefetch_levels>] [-i <iterations>] \n";
+                std::cerr << "Usage Help: ./rangequery -h\n";
                 return 1;
         }
     }
 
     /* Check if required options are provided */ 
     if (empty(input_filename) || num_threads < 1) {
-        std::cerr << "Usage: " << argv[0] << "./rangequery -m <mode> -f <input_filename> -t <num_threads> [-v] [-l <levels_saved>] [-c <combine_fn_str>] [-p <prefetch_levels>] [-i <iterations>] \n";
+        std::cerr << "Usage Help: ./rangequery -h\n";
         return 1;
     }
 
@@ -283,16 +306,23 @@ int main(int argc, char* argv[]) {
 
     double total_run_init = 0.0, total_run_comp = 0.0;
     for (int i = 0; i < num_runs; i++) {
-        auto [run_init_time, run_comp_time] = run(num_threads, orig_array_size, num_query, num_update, num_ops, ops, batch_starts, combine_fn, combine_type, prefetch_levels, levels_saved, mode, validate, expected_query_results);
+        auto [run_init_time, run_comp_time] = run(num_threads, orig_array_size, num_query, num_update, num_ops, ops, batch_starts, combine_fn, combine_type, prefetch_levels, levels_saved, mode, individual_report, validate, expected_query_results);
         total_run_init += run_init_time;
         total_run_comp += run_comp_time;
     }
 
+    /* Main init time doesn't need to be re-run or averaged since its the same for all runs */
     double total_init = total_run_init + main_init_time;
 
-    std::cout << "\n=== AVERAGED OVER " << num_runs << " RUNS ===\n";
-    std::cout << "Avg Init (sec): " << std::fixed << std::setprecision(5) << total_init / num_runs << '\n';
-    std::cout << "Avg Comp (sec): " << std::fixed << std::setprecision(5) << total_run_comp / num_runs << '\n';
+    std::string full_call = "\nCall:";
+    for (int i = 0; i < argc; ++i) {
+        full_call += " " + std::string(argv[i]);
+    }
+    std::cout << full_call << "\n";
+
+    std::cout << "=== AVERAGED OVER " << num_runs << " RUNS ===\n";
+    std::cout << "Avg Init  (sec): " << std::fixed << std::setprecision(5) << total_init / num_runs << '\n';
+    std::cout << "Avg Comp  (sec): " << std::fixed << std::setprecision(5) << total_run_comp / num_runs << '\n';
     std::cout << "Avg Total (sec): " << std::fixed << std::setprecision(5) << (total_init + total_run_comp) / num_runs << '\n';
 
     return 0;

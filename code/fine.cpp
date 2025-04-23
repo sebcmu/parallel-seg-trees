@@ -25,11 +25,9 @@ void fineWorker(
     int queries_completed = 0;
     int batch_iter = 0;
     int num_batches = batch_starts.size();
-    // optimization
     int num_levels = std::log2(array_size) + 1;
     int max_levels_saved = num_levels - 1;
     int levels_saved = std::min(levels_saved_arg,max_levels_saved);
-    /* First x levels correspond to first 2^x-1 array elements*/
     int u_levels_saved = std::pow(2,levels_saved+1) - 1;
 
     while(true){
@@ -48,18 +46,15 @@ void fineWorker(
                 int x = op[2];
                 
                 int u = i + array_size - 1;
-                // lock ST[u]
                 ST_mutexes[u].lock();
                 ST[u] = combine_fn(ST[u],x);
                 ST_mutexes[u].unlock();
-                // unlock ST[u]
+                
                 while (u >= u_levels_saved){
-                    // parent, leftChild, and rightChild are just mathematical functions on u and don't need locking
                     u = parent(u);
                     int left_child_u = leftChild(u);
                     int right_child_u = rightChild(u);
                     ST_mutexes[u].lock();
-                    // ST[u] =  ST[left_child_u] + ST[right_child_u];
                     ST[u] = combine_fn(ST[left_child_u],ST[right_child_u]);
                     ST_mutexes[u].unlock();
                 }
@@ -81,15 +76,6 @@ void fineWorker(
                 }
                 batch_barrier.arrive_and_wait();
             }
-            // for (int level = levels_saved-1; level >= 0; level--){
-            //     int num_nodes = std::pow(2,level);
-            //     int start_node = num_nodes - 1;
-            //     for (int node = tid; node < num_nodes; node+=num_threads){
-            //         int u = start_node + node;
-            //         ST[u] = combine_fn(ST[leftChild(u)],ST[rightChild(u)]);
-            //     }
-            //     batch_barrier.arrive_and_wait();
-            // }
         } else if(batch_type == QUERY){
             for (int op_i = batch_start + tid; op_i < batch_end; op_i += num_threads) {
                 const auto& op = ops[op_i];
