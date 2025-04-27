@@ -1,1 +1,0 @@
-These results were collected on the PSC machines and sent over to local machines as csv files.
