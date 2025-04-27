@@ -36,7 +36,7 @@ int main(int argc,char* argv[]){
         switch (opt){
             /* Logistical parameters */
             case 'd': dir = optarg;                             break;
-            case 'f': filename = optarg;                        break;1048576
+            case 'f': filename = optarg;                        break;
             /* Details */
             case 'n': array_size = atoi(optarg);                break;
             case 'o': num_ops = atoi(optarg);                   break;

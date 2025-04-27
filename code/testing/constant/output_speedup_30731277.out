@@ -1,0 +1,266 @@
+rm -f rangequery *.o
+g++ -m64 -Wall -O3 -std=c++20 -c main.cpp -o main.o
+g++ -m64 -Wall -O3 -std=c++20 -c serial.cpp -o serial.o
+g++ -m64 -Wall -O3 -std=c++20 -c coarse.cpp -o coarse.o
+g++ -m64 -Wall -O3 -std=c++20 -c fine.cpp -o fine.o
+g++ -m64 -Wall -O3 -std=c++20 -c fine_prefetch.cpp -o fine_prefetch.o
+g++ -m64 -Wall -O3 -std=c++20 -c fine_padded.cpp -o fine_padded.o
+g++ -m64 -Wall -O3 -std=c++20 -c lockfree.cpp -o lockfree.o
+g++ -m64 -Wall -O3 -std=c++20 -c lockfree_prefetch.cpp -o lockfree_prefetch.o
+g++ -m64 -Wall -O3 -std=c++20 -c lockfree_padded.cpp -o lockfree_padded.o
+nvcc -O3 -m64 -std=c++17 --gpu-architecture=compute_61 -g -G -c cudaprefix.cu -o cudaprefix.o
+nvcc -O3 -m64 -std=c++17 --gpu-architecture=compute_61 -g -G -c cudalevels.cu -o cudalevels.o
+g++ -m64 -Wall -O3 -std=c++20 -c helpers.cpp -o helpers.o
+g++ -m64 -Wall -O3 -std=c++20 -o rangequery main.o serial.o coarse.o fine.o fine_prefetch.o fine_padded.o lockfree.o lockfree_prefetch.o lockfree_padded.o cudaprefix.o cudalevels.o helpers.o -L/usr/local/cuda-11.7/lib64 -lcudart -lpthread
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m fine -t 1 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01935
+Avg Comp  (sec): 0.07149
+Avg Total (sec): 0.09084
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m fine -t 2 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01178
+Avg Comp  (sec): 0.07019
+Avg Total (sec): 0.08198
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m fine -t 4 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01130
+Avg Comp  (sec): 0.04277
+Avg Total (sec): 0.05407
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m fine -t 8 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01155
+Avg Comp  (sec): 0.03443
+Avg Total (sec): 0.04598
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m fine -t 16 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01175
+Avg Comp  (sec): 0.03250
+Avg Total (sec): 0.04425
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m fine -t 32 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01154
+Avg Comp  (sec): 0.04588
+Avg Total (sec): 0.05742
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m fine -t 64 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01157
+Avg Comp  (sec): 0.08139
+Avg Total (sec): 0.09297
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m fine -t 1 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02955
+Avg Comp  (sec): 0.09726
+Avg Total (sec): 0.12681
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m fine -t 2 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02046
+Avg Comp  (sec): 0.08228
+Avg Total (sec): 0.10274
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m fine -t 4 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02036
+Avg Comp  (sec): 0.06949
+Avg Total (sec): 0.08984
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m fine -t 8 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02075
+Avg Comp  (sec): 0.04921
+Avg Total (sec): 0.06996
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m fine -t 16 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02125
+Avg Comp  (sec): 0.03731
+Avg Total (sec): 0.05856
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m fine -t 32 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02161
+Avg Comp  (sec): 0.03778
+Avg Total (sec): 0.05939
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m fine -t 64 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02138
+Avg Comp  (sec): 0.05793
+Avg Total (sec): 0.07931
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m fine -t 1 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.21260
+Avg Comp  (sec): 0.50980
+Avg Total (sec): 0.72241
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m fine -t 2 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07574
+Avg Comp  (sec): 0.44247
+Avg Total (sec): 0.51821
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m fine -t 4 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07659
+Avg Comp  (sec): 0.25383
+Avg Total (sec): 0.33042
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m fine -t 8 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07629
+Avg Comp  (sec): 0.16195
+Avg Total (sec): 0.23824
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m fine -t 16 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07777
+Avg Comp  (sec): 0.11531
+Avg Total (sec): 0.19309
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m fine -t 32 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07489
+Avg Comp  (sec): 0.08673
+Avg Total (sec): 0.16162
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m fine -t 64 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07578
+Avg Comp  (sec): 0.13219
+Avg Total (sec): 0.20797
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m lockfree -t 1 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01194
+Avg Comp  (sec): 0.05733
+Avg Total (sec): 0.06926
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m lockfree -t 2 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01162
+Avg Comp  (sec): 0.05606
+Avg Total (sec): 0.06768
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m lockfree -t 4 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01170
+Avg Comp  (sec): 0.03612
+Avg Total (sec): 0.04782
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m lockfree -t 8 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01158
+Avg Comp  (sec): 0.02897
+Avg Total (sec): 0.04056
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m lockfree -t 16 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01172
+Avg Comp  (sec): 0.03102
+Avg Total (sec): 0.04274
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m lockfree -t 32 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01194
+Avg Comp  (sec): 0.03834
+Avg Total (sec): 0.05029
+
+Call: ./rangequery -f ./inputs/final/constant/small_n_65536_o_262144_c_1024_r_20_q_0.50_p_sum.txt -m lockfree -t 64 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01195
+Avg Comp  (sec): 0.07549
+Avg Total (sec): 0.08744
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m lockfree -t 1 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02270
+Avg Comp  (sec): 0.06890
+Avg Total (sec): 0.09160
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m lockfree -t 2 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02233
+Avg Comp  (sec): 0.06233
+Avg Total (sec): 0.08466
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m lockfree -t 4 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02274
+Avg Comp  (sec): 0.04994
+Avg Total (sec): 0.07268
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m lockfree -t 8 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02231
+Avg Comp  (sec): 0.03649
+Avg Total (sec): 0.05881
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m lockfree -t 16 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02276
+Avg Comp  (sec): 0.03837
+Avg Total (sec): 0.06113
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m lockfree -t 32 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02276
+Avg Comp  (sec): 0.03142
+Avg Total (sec): 0.05418
+
+Call: ./rangequery -f ./inputs/final/constant/medium_n_262144_o_262144_c_2048_r_20_q_0.50_p_sum.txt -m lockfree -t 64 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02290
+Avg Comp  (sec): 0.04837
+Avg Total (sec): 0.07127
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m lockfree -t 1 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07868
+Avg Comp  (sec): 0.32350
+Avg Total (sec): 0.40218
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m lockfree -t 2 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07726
+Avg Comp  (sec): 0.28715
+Avg Total (sec): 0.36442
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m lockfree -t 4 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07840
+Avg Comp  (sec): 0.16949
+Avg Total (sec): 0.24790
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m lockfree -t 8 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07671
+Avg Comp  (sec): 0.10249
+Avg Total (sec): 0.17920
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m lockfree -t 16 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07753
+Avg Comp  (sec): 0.11012
+Avg Total (sec): 0.18765
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m lockfree -t 32 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07807
+Avg Comp  (sec): 0.10138
+Avg Total (sec): 0.17945
+
+Call: ./rangequery -f ./inputs/final/constant/large_n_1048576_o_1048576_c_4096_r_20_q_0.50_p_sum.txt -m lockfree -t 64 -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.07910
+Avg Comp  (sec): 0.11642
+Avg Total (sec): 0.19553

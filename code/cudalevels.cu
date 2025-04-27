@@ -104,7 +104,8 @@ void runCudaLevelsImplementation(const std::vector<int>& batch_starts,const int 
                     int i = ops[op_i][1];
                     int j = ops[op_i][2];
                     int query_answer = computeSumCombine(0,i,j,0,array_size,host_ST,combine_fn);
-                    query_results[query_offset] = {op_i,query_answer};
+                    query_results[query_offset][OPERATION_INDEX] = op_i;
+                    query_results[query_offset][QUERY_ANS] = query_answer;
                     query_offset++;
                 }
             }

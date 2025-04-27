@@ -66,7 +66,8 @@ void runCudaPrefixImplementation(const std::vector<int>& batch_starts, const int
                 int l = ops[op_i][1];
                 int r = ops[op_i][2];
                 int query_answer = host_prefix_sum[r] - host_prefix_sum[l];
-                query_results[query_offset] = {op_i,query_answer};
+                query_results[query_offset][OPERATION_INDEX] = op_i;
+                query_results[query_offset][QUERY_ANS] = query_answer;
                 query_offset++;
             }
         }

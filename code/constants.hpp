@@ -2,8 +2,10 @@
 #define CONSTANTS_HPP
 
 #include <functional>
+#include <mutex>
 #include <new>
 #include <atomic>
+
 using IntCombine = std::function<int(int,int)>;
 const size_t CACHE_LINE_SIZE = 64;
 
