@@ -46,8 +46,8 @@ int lockFreeComputeSum(int u, int i, int j, int L, int R, std::atomic<int>* ST){
     }
 }
 
-int computeSumCombine(int u, int i, int j, int L, int R, const std::vector<int>& ST, IntCombine combine_fn){
-    if (non_const_flag == 1){
+int computeSumCombine(int u, int i, int j, int L, int R, const std::vector<int>& ST, IntCombine combine_fn, const int combine_type){
+    if (combine_type == 1){
         return computeSumCombineNonConst(u,i,j,L,R,ST,combine_fn);
     }else{
         return computeSumCombineConst(u,i,j,L,R,ST,combine_fn);
@@ -91,8 +91,8 @@ int computeSumCombineNonConst(int u, int i, int j, int L, int R, const std::vect
     }
 }
 
-int lockFreeComputeSumCombine(int u, int i, int j, int L, int R, std::atomic<int>* ST, IntCombine combine_fn){
-    if (non_const_flag == 1){
+int lockFreeComputeSumCombine(int u, int i, int j, int L, int R, std::atomic<int>* ST, IntCombine combine_fn, const int combine_type){
+    if (combine_type == 1){
         return lockFreeComputeSumCombineNonConst(u,i,j,L,R,ST,combine_fn);
     }else{
         return lockFreeComputeSumCombineConst(u,i,j,L,R,ST,combine_fn);
@@ -136,8 +136,8 @@ int lockFreeComputeSumCombineConst(int u, int i, int j, int L, int R, std::atomi
     }
 }
 
-int finePaddedComputeSumCombine(int u, int i, int j, int L, int R, PaddedInt* ST, IntCombine combine_fn){
-    if (non_const_flag == 1){
+int finePaddedComputeSumCombine(int u, int i, int j, int L, int R, PaddedInt* ST, IntCombine combine_fn, const int combine_type){
+    if (combine_type == 1){
         return finePaddedComputeSumCombineNonConst(u,i,j,L,R,ST,combine_fn);
     }else{
         return finePaddedComputeSumCombineConst(u,i,j,L,R,ST,combine_fn);
@@ -181,8 +181,8 @@ int finePaddedComputeSumCombineNonConst(int u, int i, int j, int L, int R, Padde
     }
 }
 
-int lockFreePaddedComputeSumCombine(int u, int i, int j, int L, int R, PaddedAtomicInt* ST, IntCombine combine_fn){
-    if (non_const_flag == 1){
+int lockFreePaddedComputeSumCombine(int u, int i, int j, int L, int R, PaddedAtomicInt* ST, IntCombine combine_fn, const int combine_type){
+    if (combine_type == 1){
         return lockFreePaddedComputeSumCombineNonConst(u,i,j,L,R,ST,combine_fn);
     }else{
         return lockFreePaddedComputeSumCombineConst(u,i,j,L,R,ST,combine_fn);

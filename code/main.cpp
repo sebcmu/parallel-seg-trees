@@ -17,28 +17,28 @@ int num_levels = 0;
 int non_const_flag = 0;
 
 void runSerialImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, IntCombine combine_fn);
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, IntCombine combine_fn, const int combine_type);
 
 void runCoarseImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int combine_type);
 
 void runFineImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int combine_type);
 
 void runFinePaddedImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    PaddedInt* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
+    PaddedInt* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int combine_type);
 
 void runFinePrefetchImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int prefetch_levels);
+    std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int combine_type, const int prefetch_levels);
 
 void runLockFreeImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
+    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int combine_type);
 
 void runLockFreePaddedImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    PaddedAtomicInt* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn);
+    PaddedAtomicInt* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int combine_type);
 
 void runLockFreePrefetchImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int prefetch_levels);
+    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int combine_type, const int prefetch_levels);
 
 void runCudaPrefixImplementation(const std::vector<int>& batch_starts, const int num_ops, const int array_size, const std::vector<std::array<int, 3>>& ops,std::vector<std::array<int, 2>>& query_results);
 
@@ -75,35 +75,35 @@ std::tuple<double, double> run(const int num_threads, const int array_size, cons
     const auto run_compute_start = std::chrono::steady_clock::now();
     if (mode == "serial") {
         if (individual_report) {std::cout << "[INFO] Running the serial implementation...\n";}
-        runSerialImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, combine_fn);
+        runSerialImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, combine_fn, combine_type);
     }
     else if (mode == "coarse") {
         if (individual_report) {std::cout << "[INFO] Running the coarse-grained locking implementation...\n";}
-        runCoarseImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn);
+        runCoarseImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn, combine_type);
     }
     else if (mode == "fine") {
         if (individual_report) {std::cout << "[INFO] Running the fine-grained locking implementation...\n";}
-        runFineImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn);
+        runFineImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn, combine_type);
     }
     else if (mode == "fine_padded") {
         if (individual_report) {std::cout << "[INFO] Running the fine-grained locking padded implementation...\n";}
-        runFinePaddedImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_F_PAD, array_size, orig_array_size, query_results, num_threads, combine_fn);
+        runFinePaddedImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_F_PAD, array_size, orig_array_size, query_results, num_threads, combine_fn, combine_type);
     }
     else if (mode == "fine_prefetch") {
         if (individual_report) {std::cout << "[INFO] Running the fine-grained locking prefetch implementation...\n";}
-        runFinePrefetchImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn, prefetch_levels);
+        runFinePrefetchImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn, combine_type, prefetch_levels);
     }
     else if (mode == "lockfree"){
         if (individual_report) {std::cout << "[INFO] Running the lock-free implementation...\n";}
-        runLockFreeImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn);
+        runLockFreeImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn, combine_type);
     }
     else if (mode == "lockfree_padded"){
         if (individual_report) {std::cout << "[INFO] Running the lock-free padded implementation...\n";}
-        runLockFreePaddedImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF_PAD, array_size, orig_array_size, query_results, num_threads, combine_fn);
+        runLockFreePaddedImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF_PAD, array_size, orig_array_size, query_results, num_threads, combine_fn, combine_type);
     }
     else if (mode == "lockfree_prefetch"){
         if (individual_report) {std::cout << "[INFO] Running the lock-free prefetch implementation...\n";}
-        runLockFreePrefetchImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn, prefetch_levels);
+        runLockFreePrefetchImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn, combine_type, prefetch_levels);
     }
     else if (mode == "cudaprefix") {
         /* In a prefix sum implementation, we use a "reverse" function (subtraction) to compute queries based off the psums array */

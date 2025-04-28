@@ -20,7 +20,8 @@ void fineWorker(
     std::vector<std::mutex>& ST_mutexes,
     std::barrier<> &batch_barrier,
     const std::vector<int>& batch_starts,
-    IntCombine combine_fn)
+    IntCombine combine_fn,
+    const int combine_type)
 {
     int queries_completed = 0;
     int batch_iter = 0;
@@ -85,7 +86,7 @@ void fineWorker(
                 int j = op[2];
                 int local_index = op_i - batch_start;
                 int result_index = queries_completed + local_index;
-                int query_answer = computeSumCombine(0,i,j,0,array_size,ST,combine_fn);
+                int query_answer = computeSumCombine(0,i,j,0,array_size,ST,combine_fn, combine_type);
                 query_results[result_index][OPERATION_INDEX] = op_i;
                 query_results[result_index][QUERY_ANS] = query_answer;
             }
@@ -98,7 +99,7 @@ void fineWorker(
 }
 
 void runFineImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-                        std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn) {
+                        std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn, const int combine_type) {
     std::vector<std::mutex> ST_mutexes(ST_size);
     std::barrier batch_barrier(num_threads);
 
@@ -107,7 +108,7 @@ void runFineImplementation(const std::vector<int>& batch_starts, const int num_o
     for (int tid = 0; tid < num_threads; tid++) {
         /* Pass as reference so that updates occur to the array we input */
         threads.emplace_back(fineWorker, num_threads, tid, array_size, levels_saved, std::ref(ops), std::ref(ST), std::ref(query_results), std::ref(ST_mutexes),
-                            std::ref(batch_barrier),batch_starts, combine_fn);
+                            std::ref(batch_barrier),batch_starts, combine_fn, combine_type);
     }
 
     for(auto &t: threads){
