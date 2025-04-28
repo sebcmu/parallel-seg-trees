@@ -1,10 +1,16 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
 
+#include <cmath>
 #include <functional>
 #include <mutex>
 #include <new>
 #include <atomic>
+#include <thread>
+#include <chrono>
+
+extern int num_levels;
+extern thread_local int current_level;
 
 using IntCombine = std::function<int(int,int)>;
 const size_t CACHE_LINE_SIZE = 64;

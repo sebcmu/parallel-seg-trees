@@ -58,6 +58,7 @@ int computeSumCombine(int u, int i, int j, int L, int R, const std::vector<int>&
             return computeSumCombine(leftChild(u),i,j,L,mid,ST,combine_fn);
         }
         else{
+            current_level = (int)std::log2(u + 1);
             return combine_fn(computeSumCombine(leftChild(u),i,j,L,mid,ST,combine_fn),computeSumCombine(rightChild(u),i,j,mid,R,ST,combine_fn));
         }
     }
@@ -75,6 +76,7 @@ int lockFreeComputeSumCombine(int u, int i, int j, int L, int R, std::atomic<int
             return lockFreeComputeSumCombine(leftChild(u),i,j,L,mid,ST,combine_fn);
         }
         else{
+            current_level = (int)std::log2(u + 1);
             return combine_fn(lockFreeComputeSumCombine(leftChild(u),i,j,L,mid,ST,combine_fn),lockFreeComputeSumCombine(rightChild(u),i,j,mid,R,ST,combine_fn));
         }
     }

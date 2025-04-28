@@ -12,6 +12,9 @@
 
 #include "constants.hpp"
 
+thread_local int current_level = 0;
+int num_levels = 0;
+
 void runSerialImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
     std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, IntCombine combine_fn);
 
@@ -61,7 +64,7 @@ std::tuple<double, double> run(const int num_threads, const int array_size, cons
     for (int i = 0; i < ST_size; i++){
         ST_F_PAD[i].value = 0;
     }
-    
+
     /* Create vector query_results to check queries for correctness */
     std::vector<std::array<int,2>> query_results(num_query);
 
@@ -72,23 +75,23 @@ std::tuple<double, double> run(const int num_threads, const int array_size, cons
     if (mode == "serial") {
         if (individual_report) {std::cout << "[INFO] Running the serial implementation...\n";}
         runSerialImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, combine_fn);
-    } 
+    }
     else if (mode == "coarse") {
         if (individual_report) {std::cout << "[INFO] Running the coarse-grained locking implementation...\n";}
         runCoarseImplementation(num_ops, num_query, num_update, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn);
-    } 
+    }
     else if (mode == "fine") {
         if (individual_report) {std::cout << "[INFO] Running the fine-grained locking implementation...\n";}
         runFineImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn);
-    } 
+    }
     else if (mode == "fine_padded") {
         if (individual_report) {std::cout << "[INFO] Running the fine-grained locking padded implementation...\n";}
         runFinePaddedImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_F_PAD, array_size, orig_array_size, query_results, num_threads, combine_fn);
-    } 
+    }
     else if (mode == "fine_prefetch") {
         if (individual_report) {std::cout << "[INFO] Running the fine-grained locking prefetch implementation...\n";}
         runFinePrefetchImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST, array_size, orig_array_size, query_results, num_threads, combine_fn, prefetch_levels);
-    } 
+    }
     else if (mode == "lockfree"){
         if (individual_report) {std::cout << "[INFO] Running the lock-free implementation...\n";}
         runLockFreeImplementation(batch_starts, num_ops, num_query, num_update, levels_saved, ops, ST_size, ST_LF, array_size, orig_array_size, query_results, num_threads, combine_fn);
@@ -199,7 +202,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    /* Check if required options are provided */ 
+    /* Check if required options are provided */
     if (empty(input_filename) || num_threads < 1) {
         std::cerr << "Usage Help: ./rangequery -h\n";
         return 1;
@@ -218,6 +221,10 @@ int main(int argc, char* argv[]) {
     else if(combine_fn_str == "min"){
         combine_fn = [](int a, int b){return std::min(a,b);};
         combine_type = COMBINE_MIN_FLAG;
+    }
+    /* Can't run nonconst on cuda implementations*/
+    else if(combine_fn_str == "nonconst"){
+        combine_type = -1;
     }
     else{
         /* Default Case If No Match on Combine Function */
@@ -244,6 +251,7 @@ int main(int argc, char* argv[]) {
 
     int array_size = static_cast<int>(std::pow(2, std::ceil(std::log2(orig_array_size))));
 
+    num_levels = std::log2(array_size)+1;
     /* Setting levels_saved if it is unset according to what we found in testing */
     if (levels_saved == -1 && (mode == "fine" || mode == "fine_prefetch" || mode == "fine_padded")) {
         levels_saved = std::log2(array_size) - 2;
@@ -251,7 +259,18 @@ int main(int argc, char* argv[]) {
         levels_saved = std::log2(array_size) - 4;
     }
 
-    
+    /* Fix for num_levels after it was read*/
+    if(combine_fn_str == "nonconst"){
+        combine_fn = [](int a, int b){
+            auto start = std::chrono::high_resolution_clock::now();
+            int result = a + b;
+            auto end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+            std::this_thread::sleep_for(std::chrono::nanoseconds(duration * (num_levels - current_level)));
+            return result;
+        };
+    }
+
     std::vector<std::array<int,3>> ops(num_ops);
     char type;
     int type_bit = -1;

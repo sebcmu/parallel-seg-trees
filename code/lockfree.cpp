@@ -44,7 +44,7 @@ void lockFreeWorker(
                 const auto& op = ops[op_i];
                 int i = op[1];
                 int x = op[2];
-                
+
                 int u = i + array_size - 1;
 
                 /* Perform update with CAS */
@@ -104,14 +104,14 @@ void lockFreeWorker(
             queries_completed += batch_end - batch_start;
         }
 
-        
+
         batch_barrier.arrive_and_wait();
         batch_iter++;
     }
 }
 
 void runLockFreeImplementation(const std::vector<int>& batch_starts, const int num_ops, const int num_query, const int num_update, const int levels_saved, const std::vector<std::array<int, 3>>& ops, const int ST_size,
-                    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn) {  
+                    std::atomic<int>* ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, const int num_threads, IntCombine combine_fn) {
 
     std::barrier batch_barrier(num_threads);
 
