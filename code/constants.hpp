@@ -11,6 +11,7 @@
 
 extern int num_levels;
 extern thread_local int current_level;
+extern int non_const_flag;
 
 using IntCombine = std::function<int(int,int)>;
 const size_t CACHE_LINE_SIZE = 64;

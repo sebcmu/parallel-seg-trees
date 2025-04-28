@@ -14,6 +14,7 @@
 
 thread_local int current_level = 0;
 int num_levels = 0;
+int non_const_flag = 0;
 
 void runSerialImplementation(const int num_ops, const int num_query, const int num_update, const std::vector<std::array<int, 3>>& ops, const int ST_size,
     std::vector<int>& ST, const int array_size, const int orig_array_size, std::vector<std::array<int,2>>& query_results, IntCombine combine_fn);
@@ -224,6 +225,7 @@ int main(int argc, char* argv[]) {
     }
     /* Can't run nonconst on cuda implementations*/
     else if(combine_fn_str == "nonconst"){
+        non_const_flag = 1;
         combine_type = -1;
     }
     else{
