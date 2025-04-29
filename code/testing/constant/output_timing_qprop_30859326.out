@@ -1,0 +1,554 @@
+rm -f rangequery *.o
+g++ -m64 -Wall -O3 -std=c++20 -c main.cpp -o main.o
+g++ -m64 -Wall -O3 -std=c++20 -c serial.cpp -o serial.o
+g++ -m64 -Wall -O3 -std=c++20 -c coarse.cpp -o coarse.o
+g++ -m64 -Wall -O3 -std=c++20 -c fine.cpp -o fine.o
+g++ -m64 -Wall -O3 -std=c++20 -c fine_prefetch.cpp -o fine_prefetch.o
+g++ -m64 -Wall -O3 -std=c++20 -c fine_padded.cpp -o fine_padded.o
+g++ -m64 -Wall -O3 -std=c++20 -c lockfree.cpp -o lockfree.o
+g++ -m64 -Wall -O3 -std=c++20 -c lockfree_prefetch.cpp -o lockfree_prefetch.o
+g++ -m64 -Wall -O3 -std=c++20 -c lockfree_padded.cpp -o lockfree_padded.o
+nvcc -O3 -m64 -std=c++17 --gpu-architecture=compute_61 -g -G -c cudaprefix.cu -o cudaprefix.o
+nvcc -O3 -m64 -std=c++17 --gpu-architecture=compute_61 -g -G -c cudalevels.cu -o cudalevels.o
+g++ -m64 -Wall -O3 -std=c++20 -c helpers.cpp -o helpers.o
+g++ -m64 -Wall -O3 -std=c++20 -o rangequery main.o serial.o coarse.o fine.o fine_prefetch.o fine_padded.o lockfree.o lockfree_prefetch.o lockfree_padded.o cudaprefix.o cudalevels.o helpers.o -L/usr/local/cuda-11.7/lib64 -lcudart -lpthread
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m serial -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02441
+Avg Comp  (sec): 0.04362
+Avg Total (sec): 0.06803
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m serial -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02443
+Avg Comp  (sec): 0.05240
+Avg Total (sec): 0.07683
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m serial -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02646
+Avg Comp  (sec): 0.06839
+Avg Total (sec): 0.09485
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m serial -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02605
+Avg Comp  (sec): 0.06496
+Avg Total (sec): 0.09101
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m serial -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02847
+Avg Comp  (sec): 0.08511
+Avg Total (sec): 0.11358
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m serial -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02884
+Avg Comp  (sec): 0.09167
+Avg Total (sec): 0.12051
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m serial -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.03153
+Avg Comp  (sec): 0.11148
+Avg Total (sec): 0.14301
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m serial -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.03164
+Avg Comp  (sec): 0.11357
+Avg Total (sec): 0.14520
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m serial -i 5 -v
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.03303
+Avg Comp  (sec): 0.13121
+Avg Total (sec): 0.16424
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m fine -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01800
+Avg Comp  (sec): 0.02351
+Avg Total (sec): 0.04151
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m fine -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01873
+Avg Comp  (sec): 0.02354
+Avg Total (sec): 0.04227
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m fine -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01930
+Avg Comp  (sec): 0.02729
+Avg Total (sec): 0.04658
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m fine -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01940
+Avg Comp  (sec): 0.02948
+Avg Total (sec): 0.04888
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m fine -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02027
+Avg Comp  (sec): 0.03052
+Avg Total (sec): 0.05080
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m fine -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02054
+Avg Comp  (sec): 0.03213
+Avg Total (sec): 0.05267
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m fine -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02117
+Avg Comp  (sec): 0.02452
+Avg Total (sec): 0.04568
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m fine -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02109
+Avg Comp  (sec): 0.02611
+Avg Total (sec): 0.04720
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m fine -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02199
+Avg Comp  (sec): 0.01735
+Avg Total (sec): 0.03934
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m fine -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01888
+Avg Comp  (sec): 0.02335
+Avg Total (sec): 0.04223
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m fine -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01991
+Avg Comp  (sec): 0.02302
+Avg Total (sec): 0.04293
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m fine -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01994
+Avg Comp  (sec): 0.02404
+Avg Total (sec): 0.04397
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m fine -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01998
+Avg Comp  (sec): 0.02427
+Avg Total (sec): 0.04425
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m fine -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02088
+Avg Comp  (sec): 0.03483
+Avg Total (sec): 0.05572
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m fine -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02134
+Avg Comp  (sec): 0.03132
+Avg Total (sec): 0.05266
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m fine -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02174
+Avg Comp  (sec): 0.03260
+Avg Total (sec): 0.05434
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m fine -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02228
+Avg Comp  (sec): 0.02687
+Avg Total (sec): 0.04915
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m fine -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02210
+Avg Comp  (sec): 0.02035
+Avg Total (sec): 0.04245
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m fine_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01893
+Avg Comp  (sec): 0.01909
+Avg Total (sec): 0.03802
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m fine_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02001
+Avg Comp  (sec): 0.01769
+Avg Total (sec): 0.03770
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m fine_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01969
+Avg Comp  (sec): 0.01714
+Avg Total (sec): 0.03683
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m fine_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02049
+Avg Comp  (sec): 0.01627
+Avg Total (sec): 0.03677
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m fine_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02008
+Avg Comp  (sec): 0.02306
+Avg Total (sec): 0.04314
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m fine_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02201
+Avg Comp  (sec): 0.01847
+Avg Total (sec): 0.04048
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m fine_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02173
+Avg Comp  (sec): 0.02168
+Avg Total (sec): 0.04341
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m fine_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02259
+Avg Comp  (sec): 0.01980
+Avg Total (sec): 0.04239
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m fine_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02216
+Avg Comp  (sec): 0.01358
+Avg Total (sec): 0.03574
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m fine_prefetch -i 5 -v -t 16 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01925
+Avg Comp  (sec): 0.02423
+Avg Total (sec): 0.04348
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m fine_prefetch -i 5 -v -t 16 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.01956
+Avg Comp  (sec): 0.01926
+Avg Total (sec): 0.03882
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m fine_prefetch -i 5 -v -t 16 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02116
+Avg Comp  (sec): 0.02087
+Avg Total (sec): 0.04203
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m fine_prefetch -i 5 -v -t 16 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02046
+Avg Comp  (sec): 0.02265
+Avg Total (sec): 0.04310
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m fine_prefetch -i 5 -v -t 16 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02255
+Avg Comp  (sec): 0.02843
+Avg Total (sec): 0.05098
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m fine_prefetch -i 5 -v -t 16 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02212
+Avg Comp  (sec): 0.02513
+Avg Total (sec): 0.04725
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m fine_prefetch -i 5 -v -t 16 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02369
+Avg Comp  (sec): 0.02872
+Avg Total (sec): 0.05241
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m fine_prefetch -i 5 -v -t 16 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02395
+Avg Comp  (sec): 0.02375
+Avg Total (sec): 0.04770
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m fine_prefetch -i 5 -v -t 16 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02384
+Avg Comp  (sec): 0.01953
+Avg Total (sec): 0.04337
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m fine_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02366
+Avg Comp  (sec): 0.02549
+Avg Total (sec): 0.04915
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m fine_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02403
+Avg Comp  (sec): 0.02756
+Avg Total (sec): 0.05160
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m fine_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02490
+Avg Comp  (sec): 0.03051
+Avg Total (sec): 0.05542
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m fine_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02469
+Avg Comp  (sec): 0.03134
+Avg Total (sec): 0.05603
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m fine_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02563
+Avg Comp  (sec): 0.03500
+Avg Total (sec): 0.06063
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m fine_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02638
+Avg Comp  (sec): 0.04131
+Avg Total (sec): 0.06769
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m fine_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02641
+Avg Comp  (sec): 0.03078
+Avg Total (sec): 0.05719
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m fine_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02678
+Avg Comp  (sec): 0.03457
+Avg Total (sec): 0.06134
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m fine_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02769
+Avg Comp  (sec): 0.02335
+Avg Total (sec): 0.05104
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m fine_padded -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02440
+Avg Comp  (sec): 0.02459
+Avg Total (sec): 0.04898
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m fine_padded -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02435
+Avg Comp  (sec): 0.02495
+Avg Total (sec): 0.04930
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m fine_padded -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02524
+Avg Comp  (sec): 0.03091
+Avg Total (sec): 0.05615
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m fine_padded -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02438
+Avg Comp  (sec): 0.02908
+Avg Total (sec): 0.05346
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m fine_padded -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02671
+Avg Comp  (sec): 0.04119
+Avg Total (sec): 0.06790
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m fine_padded -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02694
+Avg Comp  (sec): 0.03846
+Avg Total (sec): 0.06540
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m fine_padded -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02714
+Avg Comp  (sec): 0.03763
+Avg Total (sec): 0.06477
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m fine_padded -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02753
+Avg Comp  (sec): 0.03508
+Avg Total (sec): 0.06260
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m fine_padded -i 5 -v -t 16
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02727
+Avg Comp  (sec): 0.02858
+Avg Total (sec): 0.05585
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m lockfree -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02281
+Avg Comp  (sec): 0.01848
+Avg Total (sec): 0.04129
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m lockfree -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02151
+Avg Comp  (sec): 0.01934
+Avg Total (sec): 0.04085
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m lockfree -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02232
+Avg Comp  (sec): 0.02245
+Avg Total (sec): 0.04477
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m lockfree -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02251
+Avg Comp  (sec): 0.02597
+Avg Total (sec): 0.04849
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m lockfree -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02366
+Avg Comp  (sec): 0.02706
+Avg Total (sec): 0.05072
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m lockfree -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02355
+Avg Comp  (sec): 0.02781
+Avg Total (sec): 0.05136
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m lockfree -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02481
+Avg Comp  (sec): 0.02359
+Avg Total (sec): 0.04840
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m lockfree -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02494
+Avg Comp  (sec): 0.02424
+Avg Total (sec): 0.04918
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m lockfree -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02486
+Avg Comp  (sec): 0.01356
+Avg Total (sec): 0.03842
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02116
+Avg Comp  (sec): 0.01295
+Avg Total (sec): 0.03411
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02219
+Avg Comp  (sec): 0.01073
+Avg Total (sec): 0.03291
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02221
+Avg Comp  (sec): 0.01104
+Avg Total (sec): 0.03326
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02309
+Avg Comp  (sec): 0.01325
+Avg Total (sec): 0.03634
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02256
+Avg Comp  (sec): 0.01510
+Avg Total (sec): 0.03766
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02294
+Avg Comp  (sec): 0.01641
+Avg Total (sec): 0.03935
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02361
+Avg Comp  (sec): 0.01429
+Avg Total (sec): 0.03790
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02397
+Avg Comp  (sec): 0.01264
+Avg Total (sec): 0.03661
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02518
+Avg Comp  (sec): 0.01098
+Avg Total (sec): 0.03617
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m lockfree_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02362
+Avg Comp  (sec): 0.01888
+Avg Total (sec): 0.04250
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m lockfree_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02487
+Avg Comp  (sec): 0.01986
+Avg Total (sec): 0.04473
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m lockfree_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02520
+Avg Comp  (sec): 0.02297
+Avg Total (sec): 0.04817
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m lockfree_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02527
+Avg Comp  (sec): 0.02427
+Avg Total (sec): 0.04954
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m lockfree_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02550
+Avg Comp  (sec): 0.02667
+Avg Total (sec): 0.05217
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m lockfree_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02652
+Avg Comp  (sec): 0.03077
+Avg Total (sec): 0.05730
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m lockfree_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02708
+Avg Comp  (sec): 0.02364
+Avg Total (sec): 0.05072
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m lockfree_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02709
+Avg Comp  (sec): 0.02652
+Avg Total (sec): 0.05361
+
+Call: ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m lockfree_padded -i 5 -v -t 32
+=== AVERAGED OVER 5 RUNS ===
+Avg Init  (sec): 0.02829
+Avg Comp  (sec): 0.01712
+Avg Total (sec): 0.04541

@@ -254,9 +254,17 @@ int main(int argc, char* argv[]) {
     num_levels = std::log2(array_size)+1;
     /* Setting levels_saved if it is unset according to what we found in testing */
     if (levels_saved == -1 && (mode == "fine" || mode == "fine_prefetch" || mode == "fine_padded")) {
-        levels_saved = std::log2(array_size) - 2;
+        if (combine_type == -1) {
+            levels_saved =  std::log2(array_size) - 6;
+        } else {
+            levels_saved = std::log2(array_size) - 2;
+        }
     } else if (levels_saved == -1 && (mode == "lockfree" || mode == "lockfree_prefetch" || mode == "lockfree_padded")) {
-        levels_saved = std::log2(array_size) - 4;
+        if (combine_type == -1) {
+            levels_saved = std::log2(array_size) - 6;
+        } else {
+            levels_saved = std::log2(array_size) - 4;
+        }
     }
 
     /* Fix for num_levels after it was read*/

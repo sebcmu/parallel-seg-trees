@@ -1,5 +1,17 @@
-Note we did timing tests without the code able to use non-constant functions.
+To run the main code, run
+$ make clean
+$ make
+from the code directory
 
-Once we added that functionality, which involves conditional checking to apply the right functions to compute range sums, timing increased very marginally.
+Then run
+$ ./rangequery -h
+for help
 
-This should be fine since most of our graphs are speedup graphs anyways.
+To generate your own inputs, run
+$ make clean
+$ make
+from the inputs directory
+
+Then run
+$ ./gen -h
+for help

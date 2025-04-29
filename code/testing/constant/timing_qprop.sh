@@ -103,15 +103,15 @@ make
 ./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m lockfree -i 5 -v -t 32
 
 # LF Prefetch, best config: 32 threads, 12 levels saved, aggression = 2
-./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
-./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
-./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
-./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
-./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
-./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
-./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
-./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
-./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 2
+./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 1
+./rangequery -f ./inputs/milestone/qprop_milestone_b_n_262144_o_262144_c_2048_r_20_q_0.20.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 1
+./rangequery -f ./inputs/milestone/qprop_milestone_c_n_262144_o_262144_c_2048_r_20_q_0.30.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 1
+./rangequery -f ./inputs/milestone/qprop_milestone_d_n_262144_o_262144_c_2048_r_20_q_0.40.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 1
+./rangequery -f ./inputs/milestone/qprop_milestone_e_n_262144_o_262144_c_2048_r_20_q_0.50.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 1
+./rangequery -f ./inputs/milestone/qprop_milestone_f_n_262144_o_262144_c_2048_r_20_q_0.60.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 1
+./rangequery -f ./inputs/milestone/qprop_milestone_g_n_262144_o_262144_c_2048_r_20_q_0.70.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 1
+./rangequery -f ./inputs/milestone/qprop_milestone_h_n_262144_o_262144_c_2048_r_20_q_0.80.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 1
+./rangequery -f ./inputs/milestone/qprop_milestone_i_n_262144_o_262144_c_2048_r_20_q_0.90.txt -m lockfree_prefetch -i 5 -v -t 32 -l 12 -p 1
 
 # LF Padded, 32 threads was marginally worse than 16 threads, but consistency > marginal difference
 ./rangequery -f ./inputs/milestone/qprop_milestone_a_n_262144_o_262144_c_2048_r_20_q_0.10.txt -m lockfree_padded -i 5 -v -t 32
