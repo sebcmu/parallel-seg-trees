@@ -6,7 +6,7 @@ title: Parallelizing Range Queries with Lock-Free SegTrees
 Title: Parallelizing Range Queries with Lock-Free SegTrees  
 Authors: Sebastian Dounchis, Neo Lopez
 
-[Final Project Report PDF](docs/Final%20Report%20418.pdf)
+[Final Project Report PDF](docs/Final_Report_418.pdf)
 
 [Milestone Report PDF](docs/Milestone%20Report%20418.pdf)
 
